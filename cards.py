@@ -22,7 +22,7 @@ class PropertyColor(Enum):
     UTILITY = auto()
     RAILROAD = auto()
 
-class ActioCardType(Enum):
+class ActionCardType(Enum):
     JUST_SAY_NO = auto()
     DEAL_BREAKER = auto()
     SLY_DEAL = auto()
@@ -43,6 +43,8 @@ class Card:
     
     def __str__(self):
         return f"{self.name} (${self.value})"
+    def __repr__(self):
+        return f"{self.name} (${self.value})"
 
 class MoneyCard(Card):
     def __init__(self, value: int):
@@ -62,7 +64,7 @@ class RentCard(Card):
         self.colors = colors
 
 class ActionCard(Card):
-    def __init__(self, action_type: ActioCardType, value: int):
+    def __init__(self, action_type: ActionCardType, value: int):
         super().__init__(action_type.name, CardType.ACTION, value)
         self.action_type = action_type
 

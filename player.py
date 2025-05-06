@@ -26,7 +26,8 @@ class Player:
         # if card is house or hotel play add to action pile of player
         pass
 
-    def total_money(self) -> int:
+    def total_worth(self) -> int:
+        # calculate total money in bank and values of property
         pass
 
     def get_owned_property_info(self) -> Dict[PropertyColor,Tuple[int, int]]:
