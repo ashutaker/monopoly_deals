@@ -1,6 +1,6 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
-from cards import Card,PropertyColor
+from cards import *
 class Player:
     def __init__(self,name):
         self.name = name
@@ -13,22 +13,54 @@ class Player:
         self.hand.append(card)
 
     def play_money(self,card_index: int) -> bool:
-        # which card from in hand cards goes into the money pile ?
-        pass
+        if 0 <= card_index < len(self.hand):
+            card = self.hand.pop(card_index)
+            self.money_pile.append(card)
+            return True
+        return False
+
 
     def play_property(self,card_index: int, assign_color: Optional[PropertyColor]=None):
         # for property card add it to propertyset
         # for wild property card assign color and add to that set
-        pass
+        if 0 <= card_index < len(self.hand):
+            card = self.hand[card_index]
+            if card.card_type == CardType.PROPERTY:
+                self.hand.pop(card_index)
+                self.property_sets[card.color].append(card)
+                return True
+            if card.card_type == CardType.WILD_PROPERTY:    
+                if assign_color and assign_color in card.colors:
+                    self.hand.pop(card_index)
+                    card.assign_color = assign_color
+                    self.property_sets[assign_color].append(card)
+                    return True
+        return False
 
     def play_action(self,card_index:int) -> Optional[Card]:
         # if card is rent,action or wild rent return card
         # if card is house or hotel play add to action pile of player
-        pass
+        if 0 <= card_index < len(self.hand):
+            card = self.hand[card_index]
+            if card.card_type in [CardType.ACTION, CardType.RENT,CardType.WILD_RENT]:
+                self.hand.pop(card_index)
+                if (card.card_type == CardType.ACTION and 
+                    card.action_type in [ActionCardType.HOUSE,ActionCardType.HOTEL]):
+                    self.action_pile.append(card)
+            return card
+        return None
 
     def total_worth(self) -> int:
         # calculate total money in bank and values of property
-        pass
+        money_in_bank = sum(card.value for card in self.money_pile)
+        property_value = 0
+        for property in self.property_sets:
+            property_value += sum([card.value for card in self.property_sets[property]])
+        return money_in_bank + property_value
+
+    def has_full_propertyset(self,color: PropertyColor) -> bool:
+        set_size = self.property_sets[color][0].set_size
+        return len(self.property_sets[color]) >= set_size
 
     def get_owned_property_info(self) -> Dict[PropertyColor,Tuple[int, int]]:
         # get players owned property state vs required info for each color

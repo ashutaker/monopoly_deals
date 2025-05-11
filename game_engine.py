@@ -2,7 +2,7 @@
 
 import random
 from typing import List, Optional
-
+from util import * 
 from cards import *
 from player import Player
 
@@ -195,28 +195,24 @@ class GameEngine:
         # first preference will be money pile then property will be chosen
         # TODO : Player property for payment
         money_available = from_player.total_worth()
+        sort_money_cards = sorted(from_player.money_pile, key=lambda card: card.value, reverse= True)
+        sort_money_value = [card.value for card in sort_money_cards]
         if money_available > amount:
-            payment_cards = []
-            transferred_money = 0
+                        
+            cards_to_transter_by_value = get_cards_by_value(sort_money_value, amount)
             
-            for card in sorted(from_player.money_pile, key=lambda card: card.value):
-                if transferred_money + card.value <= amount:
-                    payment_cards.append(card)
-                    transferred_money +=card.value
-                if transferred_money >= amount:
-                    break
+            for card_value in cards_to_transter_by_value:
+                pay_card = ([card for card in from_player.money_pile if card.value == card_value][0])
+                from_player.money_pile.remove(pay_card)
+                to_player.money_pile.append(pay_card)
             
-            for card in payment_cards:
-                from_player.money_pile.remove(card)
-                to_player.money_pile.append(card)
-            
-            return transferred_money
+                return sum(cards_to_transter_by_value)
         else:
             for card in from_player.money_pile:
                 from_player.money_pile.remove(card)
                 to_player.money_pile.append(card)
             
-            return transferred_money
+            return amount
 
 
 
