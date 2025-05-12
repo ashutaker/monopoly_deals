@@ -171,6 +171,7 @@ class GameEngine:
                 print("Done reshuffling, Continue !!!")
             if self.draw_pile:
                 player.add_to_hand(self.draw_pile.pop())
+        print(f"{draw_count} cards added to {player.name} hand")
 
     def current_player(self) -> Player:
         # returns current player
@@ -187,8 +188,30 @@ class GameEngine:
         # debt collector
         # rent/wild rent
         # birthday
-        # 
-        pass
+        
+        current_player = self.current_player()
+        if action_card.card_type == CardType.ACTION: 
+            if action_card.action_type == ActionCardType.PASS_GO:
+                # if pass go
+                pass
+            if action_card.action_type == ActionCardType.DEBT_COLLECTOR:
+                # collect money 
+                pass
+            elif action_card.action_type == ActionCardType.ITS_MY_BIRTHDAY:
+                # collect money from all other player
+                pass
+        elif action_card.card_type == CardType.RENT:
+            # check if player has the called color in propertyset
+            # calculate the amount as per properties in set
+            # collect money from every player
+            pass
+        elif action_card.card_type == CardType.WILD_RENT:
+            # choose the color from propertyset
+            # calculate the rent
+            # collect money
+            pass
+        return False
+
 
     def collect_money(self, from_player: Player, to_player: Player, amount: int) -> int:
         # find the closest denomination to pay with money or property
@@ -213,9 +236,19 @@ class GameEngine:
                 to_player.money_pile.append(card)
             
             return amount
-
+    
+    def get_game_state(self):
+        # Shows all player money and property
+        pass
 
 
     def Check_winner(self) -> Optional[Player]:
         # check propertyset of each player before changing turn
-        pass
+        current_player = self.current_player()
+        complete_property_set = 0
+        for color in current_player.property_sets:
+            if current_player.has_full_propertyset(color):
+                complete_property_set +=1 
+        if complete_property_set == 3:
+            return current_player
+        return None
