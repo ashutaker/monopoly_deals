@@ -6,7 +6,7 @@ from util import *
 from cards import *
 from player import Player
 
-MAX_IN_HAND_CARD_COUNT = 7
+
 
 class GameEngine:
     def __init__(self,player_names: List[str]):
@@ -16,6 +16,20 @@ class GameEngine:
         self.discard_pile = []
         self.setup_deck()
         self.deal_cards()
+
+    MAX_IN_HAND_CARD_COUNT = 7
+    Property_Set = {
+    PropertyColor.BROWN : 2,
+    PropertyColor.DARK_BLUE :2,
+    PropertyColor.GREEN : 3,
+    PropertyColor.LIGHT_BLUE : 3,
+    PropertyColor.ORANGE : 3,
+    PropertyColor.PINK : 3,
+    PropertyColor.RED : 3,
+    PropertyColor.YELLOW : 3,
+    PropertyColor.RAILROAD : 4,
+    PropertyColor.UTILITY : 2
+}
 
     def setup_deck(self):
             # Create complete deck of the playable cards and add them to draw pile
@@ -240,6 +254,20 @@ class GameEngine:
     def get_game_state(self):
         # Shows all player money and property
         pass
+    
+    def display_player_hand(self,player: Player):
+        for i, card in enumerate(player.hand):
+            print(f"{i+1} - {card}")
+
+    def display_player_properties(self,player: Player):
+        if player.property_sets:
+            print("Property in play")
+            for color, (current_size,required_size) in player.get_owned_property_info().items():
+                properties = player.property_sets[color]
+                print(f"{color.name} : {current_size}/{required_size}")
+                print(property for property in properties)
+        else:
+            print(f"No properties in play.")
 
 
     def Check_winner(self) -> Optional[Player]:

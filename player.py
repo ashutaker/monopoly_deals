@@ -14,9 +14,14 @@ class Player:
 
     def play_money(self,card_index: int) -> bool:
         if 0 <= card_index < len(self.hand):
-            card = self.hand.pop(card_index)
-            self.money_pile.append(card)
-            return True
+            card = self.hand[card_index]
+            if card.card_type != CardType.PROPERTY:
+                self.hand.pop(card_index)
+                self.money_pile.append(card)
+                return True
+            else:
+                print("Property card cannot be played into money pile")
+            
         return False
 
 
@@ -37,7 +42,7 @@ class Player:
                     return True
         return False
 
-    def play_action(self,card_index:int) -> Optional[Card]:
+    def play_action(self, card_index: int) -> Optional[Card]:
         # if card is rent,action or wild rent return card
         # if card is house or hotel play add to action pile of player
         if 0 <= card_index < len(self.hand):
@@ -64,5 +69,16 @@ class Player:
 
     def get_owned_property_info(self) -> Dict[PropertyColor,Tuple[int, int]]:
         # get players owned property state vs required info for each color
-        pass
+        result = {}
+        for color in PropertyColor:
+            if self.property_sets[color]:
+                current_set_size = len(self.property_sets[color])
+                required_set_size = self.property_sets[color][0].set_size
+                result[color] = (current_set_size,required_set_size)
+        return result
+    
+    def discard_card(self,card_index: int) -> Card:
+        if 0 <= card_index < len(self.hand):
+            discard_card = self.hand.pop(card_index)
+        return discard_card
 
