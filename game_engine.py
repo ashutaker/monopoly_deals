@@ -18,18 +18,7 @@ class GameEngine:
         self.deal_cards()
 
     MAX_IN_HAND_CARD_COUNT = 7
-    Property_Set = {
-    PropertyColor.BROWN : 2,
-    PropertyColor.DARK_BLUE :2,
-    PropertyColor.GREEN : 3,
-    PropertyColor.LIGHT_BLUE : 3,
-    PropertyColor.ORANGE : 3,
-    PropertyColor.PINK : 3,
-    PropertyColor.RED : 3,
-    PropertyColor.YELLOW : 3,
-    PropertyColor.RAILROAD : 4,
-    PropertyColor.UTILITY : 2
-}
+
 
     def setup_deck(self):
             # Create complete deck of the playable cards and add them to draw pile
@@ -185,7 +174,7 @@ class GameEngine:
                 print("Done reshuffling, Continue !!!")
             if self.draw_pile:
                 player.add_to_hand(self.draw_pile.pop())
-        print(f"{draw_count} cards added to {player.name} hand")
+        print(f"{draw_count} cards added to {player.name}'s hand")
 
     def current_player(self) -> Player:
         # returns current player
@@ -204,26 +193,57 @@ class GameEngine:
         # birthday
         
         current_player = self.current_player()
-        if action_card.card_type == CardType.ACTION: 
+        if action_card.card_type == CardType.ACTION:
             if action_card.action_type == ActionCardType.PASS_GO:
-                # if pass go
-                pass
+                self.draw_card(current_player)
+                return True
             if action_card.action_type == ActionCardType.DEBT_COLLECTOR:
-                # collect money 
-                pass
+                amount = 5
+                transferred = self.collect_money(target_player, current_player, amount)
+                if transferred:
+                    print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                    return True
             elif action_card.action_type == ActionCardType.ITS_MY_BIRTHDAY:
                 # collect money from all other player
-                pass
+                amount = 2
+                for player in self.players:
+                    if player != current_player:
+                        transferred = self.collect_money(player, current_player,amount)
+                        if transferred:
+                            print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                return True
         elif action_card.card_type == CardType.RENT:
             # check if player has the called color in propertyset
             # calculate the amount as per properties in set
             # collect money from every player
-            pass
+            rent_card = action_card
+            all_rents=[]
+            for color in rent_card.colors:
+                if current_player.property_sets[color]:
+                    set_size = len(current_player.property_sets[color])
+                    rent_value = PropertyCard.property_set_rent_values[color][set_size - 1]
+                    all_rents.append(rent_value)
+            amount =  int(max(all_rents))
+            if amount:
+                for player in self.players:
+                    if player != current_player:
+                        transferred = self.collect_money(player, current_player,amount)
+                        if transferred:
+                            print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                return True
         elif action_card.card_type == CardType.WILD_RENT:
-            # choose the color from propertyset
-            # calculate the rent
-            # collect money
-            pass
+            if target_player:
+                all_rents=[]
+                for color in current_player.property_sets:
+                    set_size = len(current_player.property_sets[color])
+                    rent_value = Card.property_set_rent_values[color][(set_size - 1)]
+                    all_rents.append(rent_value)
+                amount = int(max(all_rents))
+                if amount:
+                    transferred = self.collect_money(target_player,current_player,amount)
+                    if transferred:
+                            print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                return True
         return False
 
 
@@ -235,39 +255,40 @@ class GameEngine:
         sort_money_cards = sorted(from_player.money_pile, key=lambda card: card.value, reverse= True)
         sort_money_value = [card.value for card in sort_money_cards]
         if money_available > amount:
-                        
+
             cards_to_transter_by_value = get_cards_by_value(sort_money_value, amount)
-            
+
             for card_value in cards_to_transter_by_value:
                 pay_card = ([card for card in from_player.money_pile if card.value == card_value][0])
                 from_player.money_pile.remove(pay_card)
                 to_player.money_pile.append(pay_card)
-            
+
                 return sum(cards_to_transter_by_value)
         else:
             for card in from_player.money_pile:
                 from_player.money_pile.remove(card)
                 to_player.money_pile.append(card)
-            
+
             return amount
-    
+
     def get_game_state(self):
         # Shows all player money and property
         pass
     
     def display_player_hand(self,player: Player):
+        print(f"\n{player.name}'s hand", "-" * 20)
         for i, card in enumerate(player.hand):
             print(f"{i+1} - {card}")
 
     def display_player_properties(self,player: Player):
         if player.property_sets:
-            print("Property in play")
+            print(f"\n{player.name}'s Property in play","-" * 20)
             for color, (current_size,required_size) in player.get_owned_property_info().items():
                 properties = player.property_sets[color]
                 print(f"{color.name} : {current_size}/{required_size}")
                 print(property for property in properties)
         else:
-            print(f"No properties in play.")
+            print(f"\n{player.name} has no properties in play.")
 
 
     def Check_winner(self) -> Optional[Player]:

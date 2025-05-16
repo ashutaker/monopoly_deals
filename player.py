@@ -37,7 +37,7 @@ class Player:
             if card.card_type == CardType.WILD_PROPERTY:    
                 if assign_color and assign_color in card.colors:
                     self.hand.pop(card_index)
-                    card.assign_color = assign_color
+                    card.assign_color(assign_color)
                     self.property_sets[assign_color].append(card)
                     return True
         return False
@@ -64,7 +64,7 @@ class Player:
         return money_in_bank + property_value
 
     def has_full_propertyset(self,color: PropertyColor) -> bool:
-        set_size = self.property_sets[color][0].set_size
+        set_size = Card._property_set_size[color]
         return len(self.property_sets[color]) >= set_size
 
     def get_owned_property_info(self) -> Dict[PropertyColor,Tuple[int, int]]:
