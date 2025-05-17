@@ -171,7 +171,7 @@ class GameEngine:
                 self.draw_pile = self.discard_pile
                 self.discard_pile = []
                 random.shuffle(self.draw_pile)
-                print("Done reshuffling, Continue !!!")
+                print("Done reshuffling !!!")
             if self.draw_pile:
                 player.add_to_hand(self.draw_pile.pop())
         print(f"{draw_count} cards added to {player.name}'s hand")
@@ -180,63 +180,79 @@ class GameEngine:
         # returns current player
         return self.players[self.current_player_id]
 
-    def next_player(self):
-        # pick next player, update the current player index
+    def next_player(self) -> Player:
+        # pick next player in turn, set it to current player
         self.current_player_id = (self.current_player_id + 1) % len(self.players)
         return self.players[self.current_player_id]
 
     def process_action_card(self,action_card: Card, target_player: Optional[Player] = None) -> bool:
-        # depeding on the type of action manage the money and properties etc
-        # pass go
-        # debt collector
-        # rent/wild rent
-        # birthday
+        # depending on the type of action card manage the money and properties etc
         
         current_player = self.current_player()
         if action_card.card_type == CardType.ACTION:
             if action_card.action_type == ActionCardType.PASS_GO:
                 self.draw_card(current_player)
                 return True
-            if action_card.action_type == ActionCardType.DEBT_COLLECTOR:
+            elif action_card.action_type == ActionCardType.DEBT_COLLECTOR:
                 amount = 5
                 transferred = self.collect_money(target_player, current_player, amount)
                 if transferred:
                     print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
                     return True
             elif action_card.action_type == ActionCardType.ITS_MY_BIRTHDAY:
-                # collect money from all other player
+                # collect money from all the other players
                 amount = 2
                 for player in self.players:
                     if player != current_player:
+                        if player.total_worth() == 0:
+                            print(f"{player.name} has 0M ")
+                            continue
                         transferred = self.collect_money(player, current_player,amount)
                         if transferred:
-                            print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                            print(f"Successfully transferred {transferred}M from {player.name} to {current_player.name}.")
                 return True
+            elif action_card.action_type == ActionCardType.DEAL_BREAKER:
+                # TODO : process dealbreaker card
+                pass
+            elif action_card.action_type == ActionCardType.SLY_DEAL:
+                # TODO : process sly deal card
+                pass
+            elif action_card.action_type == ActionCardType.FORCE_DEAL:
+                # TODO : process force deal  card
+                pass
+            elif action_card.action_type == ActionCardType.DOUBLE_RENT:
+                # TODO : process double rent card
+                pass
         elif action_card.card_type == CardType.RENT:
-            # check if player has the called color in propertyset
+            # check if player has the called color in property set
             # calculate the amount as per properties in set
             # collect money from every player
             rent_card = action_card
+
             all_rents=[]
             for color in rent_card.colors:
                 if current_player.property_sets[color]:
                     set_size = len(current_player.property_sets[color])
-                    rent_value = PropertyCard.property_set_rent_values[color][set_size - 1]
+                    rent_value = PropertyCard._property_set_rent_values[color][set_size - 1]
                     all_rents.append(rent_value)
-            amount =  int(max(all_rents))
-            if amount:
+            if all_rents:
+                amount = int(max(all_rents))
                 for player in self.players:
                     if player != current_player:
                         transferred = self.collect_money(player, current_player,amount)
                         if transferred:
-                            print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                            print(f"Successfully transferred {transferred}M from {player.name} to {current_player.name}.")
                 return True
+            else:
+                print("Cannot collect rent no properties played. Returning card to player hand !!")
+                current_player.add_to_hand(rent_card)
+                return False
         elif action_card.card_type == CardType.WILD_RENT:
             if target_player:
                 all_rents=[]
                 for color in current_player.property_sets:
                     set_size = len(current_player.property_sets[color])
-                    rent_value = Card.property_set_rent_values[color][(set_size - 1)]
+                    rent_value = PropertyCard._property_set_rent_values[color][(set_size - 1)]
                     all_rents.append(rent_value)
                 amount = int(max(all_rents))
                 if amount:
@@ -252,18 +268,18 @@ class GameEngine:
         # first preference will be money pile then property will be chosen
         # TODO : Player property for payment
         money_available = from_player.total_worth()
-        sort_money_cards = sorted(from_player.money_pile, key=lambda card: card.value, reverse= True)
-        sort_money_value = [card.value for card in sort_money_cards]
-        if money_available > amount:
 
-            cards_to_transter_by_value = get_cards_by_value(sort_money_value, amount)
+        if 0 < money_available >= amount:
+            sort_money_cards = sorted(from_player.money_pile, key=lambda card: card.value, reverse=True)
+            sort_money_value = [card.value for card in sort_money_cards]
+            cards_to_transfer_by_value = get_cards_by_value(sort_money_value, amount)
 
-            for card_value in cards_to_transter_by_value:
+            for card_value in cards_to_transfer_by_value:
                 pay_card = ([card for card in from_player.money_pile if card.value == card_value][0])
                 from_player.money_pile.remove(pay_card)
                 to_player.money_pile.append(pay_card)
 
-                return sum(cards_to_transter_by_value)
+                return sum(cards_to_transfer_by_value)
         else:
             for card in from_player.money_pile:
                 from_player.money_pile.remove(card)
@@ -286,12 +302,12 @@ class GameEngine:
             for color, (current_size,required_size) in player.get_owned_property_info().items():
                 properties = player.property_sets[color]
                 print(f"{color.name} : {current_size}/{required_size}")
-                print(property for property in properties)
+                print( [property.name for property in properties] )
         else:
             print(f"\n{player.name} has no properties in play.")
 
 
-    def Check_winner(self) -> Optional[Player]:
+    def check_winner(self) -> Optional[Player]:
         # check propertyset of each player before changing turn
         current_player = self.current_player()
         complete_property_set = 0

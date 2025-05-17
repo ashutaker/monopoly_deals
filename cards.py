@@ -40,31 +40,7 @@ class Card:
         self.name = name
         self.card_type = card_type
         self.value = value
-    # _property_set_size = {
-    #     PropertyColor.BROWN : 2,
-    #     PropertyColor.DARK_BLUE :2,
-    #     PropertyColor.GREEN : 3,
-    #     PropertyColor.LIGHT_BLUE : 3,
-    #     PropertyColor.ORANGE : 3,
-    #     PropertyColor.PINK : 3,
-    #     PropertyColor.RED : 3,
-    #     PropertyColor.YELLOW : 3,
-    #     PropertyColor.RAILROAD : 4,
-    #     PropertyColor.UTILITY : 2
-    # }
-    property_set_rent_values = {
-        PropertyColor.BROWN : [1,2],
-        PropertyColor.DARK_BLUE :[3,8],
-        PropertyColor.GREEN : [2,4,7],
-        PropertyColor.LIGHT_BLUE : [1,2,3],
-        PropertyColor.ORANGE : [1,3,5],
-        PropertyColor.PINK : [1,2,4],
-        PropertyColor.RED : [2,3,6],
-        PropertyColor.YELLOW : [2,4,6],
-        PropertyColor.RAILROAD : [1,2,3,4],
-        PropertyColor.UTILITY : [1,2]    
-    }
-   
+
     def __str__(self):
         return f"{self.name} (${self.value})"
     def __repr__(self):

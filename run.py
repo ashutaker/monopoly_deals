@@ -43,20 +43,19 @@ def run():
             draw_count = 5
         game.draw_card(current_player, draw_count)
 
-        # Display player its hand, property and money
-        ## player hand
-        game.display_player_hand(current_player)
-        
-        ## properties
-        game.display_player_properties(current_player)
-        
-        ## money
-        print(f"Total money : {sum(card.value for card in current_player.money_pile)}")
-
         # Upto 3 actions
         actions_performed = 0
         while actions_performed < 3:
+            choice = None
+            # Display player its hand, property and money
+            ## player hand
             game.display_player_hand(current_player)
+
+            ## properties
+            game.display_player_properties(current_player)
+
+            ## money
+            print(f"Total money : {sum(card.value for card in current_player.money_pile)}")
             print("\nActions:", ("=" * 40))
             print("1. Add to money pile")
             print("2. Play a property card")
@@ -75,7 +74,6 @@ def run():
                     print("Invalid card number entered.")
             elif choice == "2" : # play property
                 card_index = int(input("Enter a card number from your hand to play property:")) - 1
-                
                 if 0 <= card_index < len(current_player.hand):
                     if current_player.hand[card_index].card_type == CardType.WILD_PROPERTY:
                         wild_property = current_player.hand[card_index]
@@ -100,7 +98,7 @@ def run():
                 else:
                     print("Invalid card number entered.")
             elif choice == "3" : # play action
-                card_index = int(input("Enter a card number from your hand to play into money pile: ")) - 1
+                card_index = int(input("Enter a card number from your hand to play : ")) - 1
                 target_required = False
                 target = None
                 if 0 <= card_index < len(current_player.hand):
@@ -110,13 +108,17 @@ def run():
                         ActionCardType.PASS_GO
                     ]:
                         target_required = False
-                    elif (current_player.hand[card_index].card_type in [
-                        CardType.WILD_RENT,CardType.ACTION] and 
+
+                    elif current_player.hand[card_index].card_type == CardType.WILD_RENT:
+                        target_required = True
+
+                    elif (current_player.hand[card_index].card_type == CardType.ACTION and
                         current_player.hand[card_index].action_type in [
-                        ActionCardType.DEAL_BREAKER,
-                        ActionCardType.SLY_DEAL,                        
-                        ActionCardType.FORCE_DEAL
-                    ]):
+                            ActionCardType.DEAL_BREAKER,
+                            ActionCardType.SLY_DEAL,
+                            ActionCardType.FORCE_DEAL,
+                            ActionCardType.DEBT_COLLECTOR
+                        ]):
                         target_required = True
 
                     if target_required:
@@ -124,14 +126,14 @@ def run():
                         for i, player in enumerate(game.players):
                             print(f"{i+1} - {player.name}")
                         target = int(input("player: ")) - 1
-                        if 0<= target < len(game.players) and game.players[target] != current_player:
+                        if 0 <= target < len(game.players) and game.players[target] != current_player:
                             target = game.players[target]
                         else:
                             print("Invalid target selected")
                         
                     action_card = current_player.play_action(card_index)
                     if action_card:
-                        if game.process_action_card(action_card,target_player= target):
+                        if game.process_action_card(action_card,target_player = target):
                             actions_performed += 1
                     else:
                         print("Failed to play action card")
@@ -145,12 +147,13 @@ def run():
                 break
             else:
                 print("Invalid choice. Please choose between 1-4.")
-       
-        winner = game.Check_winner()
+
+        winner = game.check_winner()
         if winner:
-            print(f"{current_player} WON THE GAME. CONGRATULATIONS  !!!!")
+            print(f"{current_player.name} WON THE GAME. CONGRATULATIONS  !!!!")
             break
         while len(current_player.hand) > game.MAX_IN_HAND_CARD_COUNT:
+            game.display_player_hand(current_player)
             card_index = int(input("More than 7 cards in hand, you must discard. Please select a card: ")) -1
             if 0 <= card_index < len(current_player.hand):
                 discard = current_player.discard_card(card_index)

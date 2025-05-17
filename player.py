@@ -15,7 +15,7 @@ class Player:
     def play_money(self,card_index: int) -> bool:
         if 0 <= card_index < len(self.hand):
             card = self.hand[card_index]
-            if card.card_type != CardType.PROPERTY:
+            if card.card_type not in [ CardType.PROPERTY, CardType.WILD_PROPERTY]:
                 self.hand.pop(card_index)
                 self.money_pile.append(card)
                 return True
@@ -58,13 +58,13 @@ class Player:
     def total_worth(self) -> int:
         # calculate total money in bank and values of property
         money_in_bank = sum(card.value for card in self.money_pile)
-        property_value = 0
-        for property in self.property_sets:
-            property_value += sum([card.value for card in self.property_sets[property]])
-        return money_in_bank + property_value
+        # property_value = 0
+        # for property in self.property_sets:
+        #     property_value += sum([card.value for card in self.property_sets[property]])
+        return money_in_bank #+ property_value
 
     def has_full_propertyset(self,color: PropertyColor) -> bool:
-        set_size = Card._property_set_size[color]
+        set_size = PropertyCard._property_set_size[color]
         return len(self.property_sets[color]) >= set_size
 
     def get_owned_property_info(self) -> Dict[PropertyColor,Tuple[int, int]]:
@@ -73,7 +73,7 @@ class Player:
         for color in PropertyColor:
             if self.property_sets[color]:
                 current_set_size = len(self.property_sets[color])
-                required_set_size = self.property_sets[color][0].set_size
+                required_set_size = PropertyCard._property_set_size[color]
                 result[color] = (current_set_size,required_set_size)
         return result
     
@@ -81,4 +81,7 @@ class Player:
         if 0 <= card_index < len(self.hand):
             discard_card = self.hand.pop(card_index)
         return discard_card
+
+    def reassign_wild_property(self,from_color : PropertyColor, to_color : PropertyColor):
+        pass
 
