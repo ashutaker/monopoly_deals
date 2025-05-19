@@ -82,6 +82,16 @@ class Player:
             discard_card = self.hand.pop(card_index)
         return discard_card
 
-    def reassign_wild_property(self,from_color : PropertyColor, to_color : PropertyColor):
-        pass
+    def reassign_wild_property(self,from_color : PropertyColor, to_color : PropertyColor) -> bool:
+        for card in self.property_sets[from_color]:
+            if card.card_type == CardType.WILD_PROPERTY:
+                self.property_sets[from_color].remove(card)
+                self.property_sets[to_color].append(card)
+                print(f"Successfully moved wild property from {from_color} to {to_color}.")
+                return True
+            else:
+                print(f"No wild property found in {from_color}.")
+        return False
+
+
 
