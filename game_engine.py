@@ -212,42 +212,42 @@ class GameEngine:
                             print(f"Successfully transferred {transferred}M from {player.name} to {current_player.name}.")
                 return True
             elif action_card.action_type == ActionCardType.DEAL_BREAKER:
-                # Check if target wants to play just say no
-                response_card = None
                 full_set_dict = {}
-                steal_property_set = []
-                dealbreaker_denied = input(f"\n{target_player.name} Do you want to play {ActionCardType.JUST_SAY_NO.name}? [ 0 - NO, 1 - YES]:")
-                if dealbreaker_denied == 1:
-                    for card in target_player.hand:
-                        if card.action_type == ActionCardType.JUST_SAY_NO:
-                            response_card = card
-                            break
-                    target_player.hand.remove(response_card)
-                    self.discard_pile.append(response_card)
-                    for card in current_player.hand:
-                        if card.action_type == ActionCardType.JUST_SAY_NO:
-                            deny_jsn = card
-                            break
-                    current_player.hand.remove(deny_jsn)
-                    self.discard_pile.append(deny_jsn)
+                for i,color in enumerate(target_player.property_sets):
+                    if target_player.has_full_propertyset(color):
+                        print(f"{i + 1} - {color}" )
+                        full_set_dict[i] = color
+                property_color = int(input(f"{current_player} Which color do you want to steal? ")) - 1
+                if property_color in full_set_dict.keys():
+                    steal_property_set = target_player.property_sets.pop(full_set_dict[property_color])
+                    current_player.property_sets[full_set_dict[property_color]].extend(steal_property_set)
                     return True
-                elif dealbreaker_denied == 0:
-                    for i,color in enumerate(target_player.property_sets):
-                        if target_player.has_full_propertyset(color):
-                            print(f"{i + 1} - {color}" )
-                            full_set_dict[i] = color
-                    property_color = int(input("Which color you want to steal? ")) - 1
-                    if property_color in full_set_dict.keys():
-                        steal_property_set = target_player.property_sets.pop(full_set_dict[property_color])
-                        current_player.property_sets[full_set_dict[property_color]].extend(steal_property_set)
+                else:
+                    print("Invalid Choice !!")
+
+            elif action_card.action_type == ActionCardType.SLY_DEAL:
+                full_set_dict = {}
+                prop_dict ={}
+                for i, color in enumerate(target_player.property_sets):
+                    if target_player.has_full_propertyset(color):
+                        print(f"{i + 1} - {color}")
+                        full_set_dict[i] = color
+                property_color = int(input(f"{current_player} From which color do you want to steal? ")) - 1
+                if property_color in full_set_dict.keys():
+                    for j,prop in enumerate(target_player.property_sets[full_set_dict[property_color]]):
+                        print(f"{ j + 1 } - prop")
+                        prop_dict[j] = prop
+                    steal_prop = int(input(f"{current_player} From which prop do you want to steal? ")) - 1
+                    if steal_prop in prop_dict.keys():
+                        # check for just say no
+                        stolen = target_player.property_sets[full_set_dict[property_color]][steal_prop]
+                        current_player.property_sets[full_set_dict[property_color]].append(stolen)
                         return True
                     else:
                         print("Invalid Choice !!")
                 else:
                     print("Invalid Choice !!")
-            elif action_card.action_type == ActionCardType.SLY_DEAL:
-                # TODO : process sly deal card
-                pass
+
             elif action_card.action_type == ActionCardType.FORCE_DEAL:
                 # TODO : process force deal  card
                 pass
