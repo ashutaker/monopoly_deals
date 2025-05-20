@@ -2,7 +2,7 @@
 
 import random
 from typing import List, Optional
-from util import * 
+from util import *
 from cards import *
 from player import Player
 
@@ -18,7 +18,7 @@ class GameEngine:
         self.deal_cards()
 
     MAX_IN_HAND_CARD_COUNT = 7
-
+    RENT_MULTIPLIER = 1
 
     def setup_deck(self):
             # Create complete deck of the playable cards and add them to draw pile
@@ -251,9 +251,6 @@ class GameEngine:
             elif action_card.action_type == ActionCardType.FORCE_DEAL:
                 # TODO : process force deal  card
                 pass
-            elif action_card.action_type == ActionCardType.DOUBLE_RENT:
-                # TODO : process double rent card
-                pass
         elif action_card.card_type == CardType.RENT:
             # check if player has the called color in property set
             # calculate the amount as per properties in set
@@ -267,12 +264,13 @@ class GameEngine:
                     rent_value = PropertyCard._property_set_rent_values[color][set_size - 1]
                     all_rents.append(rent_value)
             if all_rents:
-                amount = int(max(all_rents))
+                amount = int(max(all_rents)) * self.RENT_MULTIPLIER
                 for player in self.players:
                     if player != current_player:
                         transferred = self.collect_money(player, current_player,amount)
                         if transferred:
                             print(f"Successfully transferred {transferred}M from {player.name} to {current_player.name}.")
+                self.RENT_MULTIPLIER = 1 # resetting multiplier after collecting all rents
                 return True
             else:
                 print("Cannot collect rent no properties played. Returning card to player hand !!")
@@ -285,20 +283,21 @@ class GameEngine:
                     set_size = len(current_player.property_sets[color])
                     rent_value = PropertyCard._property_set_rent_values[color][(set_size - 1)]
                     all_rents.append(rent_value)
-                amount = int(max(all_rents))
+                amount = int(max(all_rents)) * self.RENT_MULTIPLIER
                 if amount:
                     transferred = self.collect_money(target_player,current_player,amount)
                     if transferred:
                             print(f"Successfully transferred {transferred}M from {target_player.name} to {current_player.name}.")
+                self.RENT_MULTIPLIER = 1 # resetting multiplier
                 return True
         return False
-
 
     def collect_money(self, from_player: Player, to_player: Player, amount: int) -> int:
         # find the closest denomination to pay with money or property
         # first preference will be money pile then property will be chosen
         # TODO : Player property for payment
         money_available = from_player.total_worth()
+        money_transferred = 0
 
         if 0 < money_available >= amount:
             sort_money_cards = sorted(from_player.money_pile, key=lambda card: card.value, reverse=True)
@@ -310,13 +309,13 @@ class GameEngine:
                 from_player.money_pile.remove(pay_card)
                 to_player.money_pile.append(pay_card)
 
-                return sum(cards_to_transfer_by_value)
-        else:
+            money_transferred =  sum(cards_to_transfer_by_value)
+        elif money_available < amount:
             for card in from_player.money_pile:
                 from_player.money_pile.remove(card)
                 to_player.money_pile.append(card)
-
-            return amount
+            money_transferred =  sum(card.value for card in from_player.money_pile)
+        return money_transferred
 
     def get_game_state(self):
         # Shows all player money and property
@@ -333,7 +332,7 @@ class GameEngine:
             for color, (current_size,required_size) in player.get_owned_property_info().items():
                 properties = player.property_sets[color]
                 print(f"{color.name} : {current_size}/{required_size}")
-                print( [property.name for property in properties] )
+                print([card.name for card in properties])
         else:
             print(f"\n{player.name} has no properties in play.")
 

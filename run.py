@@ -16,7 +16,7 @@ def run():
     #     name = input(f"Enter the name of player {i+1}: ")
     #     player_names.append(name)
 
-    player_names = ["Ashu", "Neha"]
+    player_names = ["Ashu", "Neha", "Naval"]
     game = GameEngine(player_names)
     winner = None
 
@@ -34,7 +34,7 @@ def run():
         5. Discard card from hand if more than 7.
         6. Select next player if no winner.
         '''
-        print(f"{current_player.name} to play !!")
+        print("\n","=" *10,f"{current_player.name} to play !!","=" *10,)
         
         # Draw cards at the beginning of the turn
         draw_count = 2
@@ -72,8 +72,9 @@ def run():
                     actions_performed += 1
                 else:
                     print("Invalid card number entered.")
+
             elif choice == "2" : # play property
-                card_index = int(input("Enter a card number from your hand to play property:")) - 1
+                card_index = int(input("Enter a card number from your hand to play property: ")) - 1
                 if 0 <= card_index < len(current_player.hand):
                     if current_player.hand[card_index].card_type == CardType.WILD_PROPERTY:
                         wild_property = current_player.hand[card_index]
@@ -98,9 +99,23 @@ def run():
                 else:
                     print("Invalid card number entered.")
             elif choice == "3" : # play action
-                card_index = int(input("Enter a card number from your hand to play : ")) - 1
+                card_index = int(input("Enter a card number from your hand to play: ")) - 1
                 target_required = False
                 target = None
+                # Cheking for double rent card
+                if (current_player.hand[card_index].card_type == CardType.ACTION and
+                        current_player.hand[card_index].action_type == ActionCardType.DOUBLE_RENT):
+                    if actions_performed < 2:
+                        print(f"Select a rent card to play with {ActionCardType.DOUBLE_RENT.name}")
+                        rent_card_index = int(input("Enter a rent card number from your hand to play: ")) - 1
+                        if current_player.hand[rent_card_index].card_type in [CardType.RENT, CardType.WILD_RENT]\
+                                and 0 <= rent_card_index < len(current_player.hand):
+                            actions_performed += 1
+                            current_player.hand.pop(card_index)
+                            card_index = rent_card_index
+                            game.RENT_MULTIPLIER = 2
+                    else:
+                        print(f"Must have 2 turns left to play {ActionCardType.DOUBLE_RENT.name}.")
                 if 0 <= card_index < len(current_player.hand):
                     if current_player.hand[card_index].card_type in [
                         CardType.RENT, 
