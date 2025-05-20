@@ -124,7 +124,8 @@ def run():
                     if target_required:
                         print("Choose a target to play against.")
                         for i, player in enumerate(game.players):
-                            print(f"{i+1} - {player.name}")
+                            if player != current_player:
+                                print(f"{i+1} - {player.name}")
                         target = int(input("player: ")) - 1
                         if 0 <= target < len(game.players) and game.players[target] != current_player:
                             target = game.players[target]
