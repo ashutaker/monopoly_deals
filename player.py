@@ -55,6 +55,17 @@ class Player:
             return card
         return None
 
+    def deny_action(self) -> Card:
+        action_denied = input(
+            f"\n{self.name} Do you want to play {ActionCardType.JUST_SAY_NO.name}? [ 0 - NO, 1 - YES]:")
+        if action_denied == 1:
+            for card in self.hand:
+                if (card.card_type == CardType.ACTION) and (card.action_type == ActionCardType.JUST_SAY_NO):
+                    self.hand.remove(card)
+                    print(f"{self.name} played {ActionCardType.JUST_SAY_NO.name} !!!")
+                    return card
+        return None
+
     def total_worth(self) -> int:
         # calculate total money in bank and values of property
         money_in_bank = sum(card.value for card in self.money_pile)

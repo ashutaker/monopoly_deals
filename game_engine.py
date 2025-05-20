@@ -336,7 +336,6 @@ class GameEngine:
         else:
             print(f"\n{player.name} has no properties in play.")
 
-
     def check_winner(self) -> Optional[Player]:
         # check propertyset of each player before changing turn
         current_player = self.current_player()
