@@ -105,7 +105,6 @@ class WildPropertyCard(Card):
         # self.acquired_set_size = PropertyCard._property_set_size[color]
         # self.acquired_rent_values = PropertyCard._property_set_rent_values[color]
 
-
 class WildRentCard(Card):
     def __init__(self, value: int):
         super().__init__("Wild Rent", CardType.WILD_RENT, value)

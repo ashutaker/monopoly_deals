@@ -2,23 +2,23 @@
 
 import random
 from typing import List, Optional
-from util import *
-from cards import *
-from player import Player
+from core.util import *
+from core.cards import *
+from core.player import Player
 
 
 
 class GameEngine:
     def __init__(self,player_names: List[str]):
-        self.players = [Player(name) for name in player_names]
-        self.current_player_id = 0
-        self.draw_pile = []
-        self.discard_pile = []
+        self.players : List[Player] = [Player(name) for name in player_names]
+        self.current_player_id : int= 0
+        self.draw_pile : List[Card] = []
+        self.discard_pile : List[Card] = []
         self.setup_deck()
         self.deal_cards()
 
-    MAX_IN_HAND_CARD_COUNT = 7
-    RENT_MULTIPLIER = 1
+    MAX_IN_HAND_CARD_COUNT : int= 7
+    RENT_MULTIPLIER : int = 1
 
     def setup_deck(self):
             # Create complete deck of the playable cards and add them to draw pile
@@ -217,40 +217,96 @@ class GameEngine:
                     if target_player.has_full_propertyset(color):
                         print(f"{i + 1} - {color}" )
                         full_set_dict[i] = color
-                property_color = int(input(f"{current_player} Which color do you want to steal? ")) - 1
+                if not full_set_dict:
+                   print(f"{target_player.name} has no full set to steal. Cannot play {ActionCardType.DEAL_BREAKER.name}")
+                   return False
+                property_color = int(input(f"{current_player.name} Which color do you want to steal? ")) - 1
                 if property_color in full_set_dict.keys():
                     steal_property_set = target_player.property_sets.pop(full_set_dict[property_color])
                     current_player.property_sets[full_set_dict[property_color]].extend(steal_property_set)
                     return True
                 else:
                     print("Invalid Choice !!")
-
             elif action_card.action_type == ActionCardType.SLY_DEAL:
                 full_set_dict = {}
-                prop_dict ={}
+                if not target_player.property_sets:
+                    print(f"{target_player.name} has no property to steal. Cannot play {ActionCardType.SLY_DEAL.name}")
+                    return False
                 for i, color in enumerate(target_player.property_sets):
-                    if target_player.has_full_propertyset(color):
+                    if target_player.property_sets[color]:
                         print(f"{i + 1} - {color}")
                         full_set_dict[i] = color
-                property_color = int(input(f"{current_player} From which color do you want to steal? ")) - 1
+                property_color = int(input(f"{current_player.name} From which color do you want to steal? ")) - 1
                 if property_color in full_set_dict.keys():
                     for j,prop in enumerate(target_player.property_sets[full_set_dict[property_color]]):
-                        print(f"{ j + 1 } - prop")
-                        prop_dict[j] = prop
-                    steal_prop = int(input(f"{current_player} From which prop do you want to steal? ")) - 1
-                    if steal_prop in prop_dict.keys():
+                        print(f"{ j + 1 } - {prop}")
+                        steal_prop = int(input(f"{current_player.name} From which prop do you want to steal? ")) - 1
+                        if steal_prop in range(len(target_player.property_sets[full_set_dict[property_color]])):
+                            # check for just say no
+                            stolen = target_player.property_sets[full_set_dict[property_color]].pop(steal_prop)
+                            current_player.property_sets[full_set_dict[property_color]].append(stolen)
+                            return True
+                    else:
+                        print("Invalid Choice !!")
+                else:
+                    print("Invalid Choice !!")
+            elif action_card.action_type == ActionCardType.FORCE_DEAL:
+                full_set_dict = {}
+                take_property_color = None
+                take_property_index = None
+                give_property_color = None
+                give_property_index = None
+                if not current_player.property_sets:
+                    print(f"YOU do not have any property to swap cannot play {ActionCardType.FORCE_DEAL.name}")
+                    return False
+                # property to give
+                full_set_dict = {}
+                for i, color in enumerate(current_player.property_sets):
+                    if current_player.property_sets[color]:
+                        print(f"{i + 1} - {color}")
+                        full_set_dict[i] = color
+                give_property_choice = int(input(f"{current_player.name} From which color do you want to GIVE? ")) - 1
+                if give_property_choice in full_set_dict.keys():
+                    give_property_color = full_set_dict[give_property_choice]
+                    for j, prop in enumerate(current_player.property_sets[full_set_dict[give_property_color]]):
+                        print(f"{j + 1} - {prop}")
+                    give_prop = int(input(f"{current_player.name} Which prop do you want to GIVE? ")) - 1
+                    if give_prop in range(len(current_player.property_sets[full_set_dict[give_property_color]])):
                         # check for just say no
-                        stolen = target_player.property_sets[full_set_dict[property_color]][steal_prop]
-                        current_player.property_sets[full_set_dict[property_color]].append(stolen)
-                        return True
+                        give_property_index = give_prop
+                    else:
+                        print("Invalid Choice !!")
+                else:
+                    print("Invalid Choice !!")
+                # property to take
+                full_set_dict = {}
+                for i, color in enumerate(target_player.property_sets):
+                    if target_player.property_sets[color]:
+                        print(f"{i + 1} - {color}")
+                        full_set_dict[i] = color
+                take_property_choice = int(input(f"{current_player.name} From which color do you want to STEAL? ")) - 1
+                if take_property_choice in full_set_dict.keys():
+                    take_property_color = full_set_dict[take_property_choice]
+                    for j, prop in enumerate(target_player.property_sets[full_set_dict[take_property_color]]):
+                        print(f"{j + 1} - {prop}")
+                    steal_prop = int(input(f"{current_player} Which prop do you want to STEAL? ")) - 1
+                    if steal_prop in range(len(target_player.property_sets[full_set_dict[take_property_color]])):
+                        # check for just say no
+                        take_property_index = steal_prop
                     else:
                         print("Invalid Choice !!")
                 else:
                     print("Invalid Choice !!")
 
-            elif action_card.action_type == ActionCardType.FORCE_DEAL:
-                # TODO : process force deal  card
-                pass
+                if take_property_index and give_property_index:
+                    take_card = target_player.property_sets[take_property_color].pop(take_property_index)
+                    current_player.property_sets[take_property_color].append(take_card)
+
+                    give_card = current_player.property_sets[give_property_color].pop(give_property_index)
+                    target_player.property_sets[give_property_color].append(give_card)
+                    return True
+                return False
+
         elif action_card.card_type == CardType.RENT:
             # check if player has the called color in property set
             # calculate the amount as per properties in set

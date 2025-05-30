@@ -1,9 +1,9 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
-from cards import *
+from core.cards import *
 class Player:
     def __init__(self,name):
-        self.name = name
+        self.name : str = name
         self.hand: List[Card] = []
         self.money_pile: List[Card] = []
         self.property_sets: Dict[PropertyColor,List[Card]] = defaultdict(list)
@@ -103,6 +103,8 @@ class Player:
             else:
                 print(f"No wild property found in {from_color}.")
         return False
+
+
 
 
 

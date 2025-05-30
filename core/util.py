@@ -33,9 +33,10 @@ def find_subset_by_sum(nums, target):
 def get_cards_by_value(sort_money,target_money):
    result_money = find_subset_by_sum(sort_money, target_money)
    while not result_money:
+       print(f"Rent to collect {target_money}")
        if sum(sort_money) < target_money:
            result_money = sort_money
        else:
-           newtarget = target_money + 1
-           result_money = find_subset_by_sum(sort_money, newtarget)
+           target_money  = target_money + 1
+           result_money = find_subset_by_sum(sort_money, target_money )
    return result_money

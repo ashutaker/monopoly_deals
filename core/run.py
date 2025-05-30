@@ -1,6 +1,6 @@
 # Initialise and maintainer the game session
-from game_engine import GameEngine
-from cards import CardType, ActionCardType
+from core.game_engine import GameEngine
+from core.cards import CardType, ActionCardType
 
 
 def run():
@@ -24,16 +24,7 @@ def run():
     #     print(player.hand)
     while not winner:
         current_player = game.current_player()
-        ''' TODO
-        1. draw 2 cards at the beginning or 5 cards if hand is empty - done
-        2. Show player its hand and property and money pile - done
-        3. Take upto three actions
-            a. Ask which card to play by index or end turn
-            b. take valid action as per selection
-        4. Check for winner at end of turn
-        5. Discard card from hand if more than 7.
-        6. Select next player if no winner.
-        '''
+
         print("\n","=" *10,f"{current_player.name} to play !!","=" *10,)
         
         # Draw cards at the beginning of the turn
@@ -48,14 +39,15 @@ def run():
         while actions_performed < 3:
             choice = None
             # Display player its hand, property and money
+            ## properties
+            print("=" * 40)
+            for player in game.players:
+                game.display_player_properties(player)
+                print(f"Total money : {sum(card.value for card in player.money_pile)}")
+            print("=" * 40)
             ## player hand
             game.display_player_hand(current_player)
 
-            ## properties
-            game.display_player_properties(current_player)
-
-            ## money
-            print(f"Total money : {sum(card.value for card in current_player.money_pile)}")
             print("\nActions:", ("=" * 40))
             print("1. Add to money pile")
             print("2. Play a property card")
