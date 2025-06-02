@@ -9,8 +9,8 @@ from models.cards import *
 from core.player import Player
 
 
-async def setup_deck(game_id) :
-        deck: dict[str, Card] = {}
+def setup_deck() -> list[Card]:
+        cards : list[Card] = []
         # # Create complete deck of the playable cards and add them to draw pile
         # # shuffle the pile before dealing cards to player
         # ## Action Cards x 34
@@ -127,32 +127,18 @@ async def setup_deck(game_id) :
         # self.draw_pile.extend([RentCard([PropertyColor.RAILROAD, PropertyColor.UTILITY], 1) for _ in range(2)])
         # self.draw_pile.extend([RentCard([PropertyColor.RED, PropertyColor.YELLOW], 1) for _ in range(2)])
 
-        cards :list[Card]= []
+
         ## Money Cards x20
         for value, count in [(10,1), (5,2), (4,3), (3,3), (2,5), (1,6)]:
             for _ in range(count):
                 card_id = str(uuid.uuid4())
-                deck[card_id] = Card(
+                card = Card(
                     id=card_id,
                     name= f"{value}M",
                     card_type=CardType.MONEY,
                     value=value)
-                cards.append(deck[card_id])
-                # await db.mongo.update_game_by_id(game_id, {"cards": cards})
-        # value = 10
-        # card = Card(id=str(uuid.uuid4()), name=f"{value}M",card_type=CardType.MONEY,value=value)
-        game_cards = Game(cards=cards)
-        update_cards = await game_collection.find_one_and_update(
-            {"_id": ObjectId(game_id)},
-            {"$update": game_cards},
-            return_document=ReturnDocument.AFTER
-        )
-
-        # update_cards = await db.mongo.update_game_by_id(game_id,{"cards": cards})
-        # Shuffle the deck
-        # random.shuffle(list(deck.keys()))
-        print("Shuffled the deck, it is ready to use !!!")
-        return update_cards
+                cards.append(card)
+        return cards
 
 
 def deal_cards(self):
