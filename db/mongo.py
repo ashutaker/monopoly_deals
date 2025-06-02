@@ -16,8 +16,10 @@ async def create_game(game: Game):
 async def get_game_by_id(game_id):
     pass
 
-async def list_games():
-    pass
+async def list_games() -> list[str]:
+    all_waiting_games = await game_collection.find({"state": "waiting"},{"_id": 1}).to_list(100)
+    games_list = [str(game["_id"] )for game in all_waiting_games]
+    return games_list
 
 async def update_game_by_id(game_id,update: dict):
     update_game = await db.game_collection.find_one_and_update(

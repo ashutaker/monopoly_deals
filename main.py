@@ -5,7 +5,7 @@ from fastapi import FastAPI, Body, HTTPException
 from pymongo.asynchronous.collection import ReturnDocument
 
 import db.mongo as db
-from models.game import Game,GameCreateModel
+from models.game import Game, GameCreateModel, GameCollection
 from models.player import Player, PlayerRequest
 import game_engine
 
@@ -21,13 +21,13 @@ async def create_game(request: GameCreateModel):
     created_game = await db.create_game(game)
     return created_game
 
-# @app.get(
-#     "/games",
-#         response_model=GameCollection,
-#         response_description="List all created games"
-#     )
-# async def list_games():
-#     return GameCollection(games = await db.game_collection.find({"state": "waiting"}).to_list(100))
+@app.get(
+    "/games",
+        response_model=GameCollection,
+        response_description="List all created games"
+    )
+async def list_games():
+    return GameCollection(games=await db.list_games())
 #
 # @app.put("/games/{game_id}/join",
 #          response_model=GameCreateModel,
