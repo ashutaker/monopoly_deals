@@ -1,5 +1,5 @@
 # Initialise and maintainer the game session
-from core.game_engine import GameEngine
+from game_engine import GameEngine
 from core.cards import CardType, ActionCardType
 
 
