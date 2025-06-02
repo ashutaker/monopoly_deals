@@ -11,3 +11,9 @@ class Player(BaseModel):
     hand : List[str] = []
     money_pile : List[str] = []
     property_set : Dict[PropertyColor, List[str]] = {} # Property color > Card ID
+
+class PlayerRequest(BaseModel):
+    name : str = Field(...)
+    # hand : List[str] = []
+    # money_pile : List[str] = []
+    # property_set : Dict[PropertyColor, List[str]] = {} # Property color > Card ID
