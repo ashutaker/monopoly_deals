@@ -1,0 +1,8 @@
+fastapi
+redis
+types-redis
+uvicorn
+motor
+pydantic
+pydantic-core
+pymongo
