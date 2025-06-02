@@ -36,7 +36,8 @@ class ActionCardType(Enum):
 
 
 class Card:
-    def __init__(self,name: str, card_type: CardType,value: int=0):
+    def __init__(self,id: str, name: str, card_type: CardType,value: int=0):
+        self.id = id
         self.name = name
         self.card_type = card_type
         self.value = value
