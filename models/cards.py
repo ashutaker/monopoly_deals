@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 class CardType(str,Enum):
@@ -26,7 +26,7 @@ class ActionCardType(str,Enum):
     JUST_SAY_NO = auto()
     DEAL_BREAKER = auto()
     SLY_DEAL = auto()
-    FORCE_DEAL = auto()
+    FORCED_DEAL = auto()
     ITS_MY_BIRTHDAY = auto()
     HOUSE = auto()
     HOTEL = auto()
@@ -68,8 +68,12 @@ class Card(BaseModel):
 class PropertyCard(Card):
     color: PropertyColor
 
-class RentCard(Card):
+class WildPropertyCard(Card):
     colors: List[PropertyColor]
+    assigned_color: Optional[PropertyColor] = None
+
+class RentCard(Card):
+    colors: Optional[List[PropertyColor]] = None
 
 class ActionCard(Card):
     action_type: ActionCardType
