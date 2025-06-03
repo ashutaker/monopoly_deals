@@ -1,7 +1,7 @@
 import uuid
 from fastapi import FastAPI, Body, HTTPException
 import db.mongo as db
-from models.game import Game, GameCreateModel, GameCollection
+from models.game import Game, GameCreateModel, GameCollection, GameState
 from models.player import Player, PlayerRequest
 import game_engine
 
@@ -49,11 +49,10 @@ async def join_game(game_id: str, player: PlayerRequest = Body(...)):
         return existing_game
     raise HTTPException(status_code=400, detail=f"failed to add player")
 
-# @app.put("/games/{game_id}/start")
-# async def start_game(game_id: str):
-#
-#     game = await db.game_collection.find_one({"_id": ObjectId(game_id)})
-#
-#     if start_game is not None:
-#         return start_game
-#     raise HTTPException(status_code=404, detail="Game {game_id} not found")
+@app.put("/games/{game_id}/start", response_model=Game)
+async def start_game(game_id: str):
+    update_state = await db.update_game_state(game_id, GameState.IN_PROGRESS.value)
+    deal_cards = game_engine.deal_cards(update_state)
+    update_game = await db.update_player_hand(deal_cards)
+
+    return update_game

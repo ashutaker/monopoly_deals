@@ -124,13 +124,14 @@ def setup_deck() -> list[Card]:
         return cards
 
 
-def deal_cards(self):
+def deal_cards(game: Game):
     # add 5 card to each player hand
     print("Dealing cards to players ...")
     for _ in range(5):
-        for player in self.players:
-            if self.draw_pile:
-                player.add_to_hand(self.draw_pile.pop())
+        for player in game["players"]:
+            card = game["draw_pile"].pop()
+            player["hand"].append(card)
+    return game
 
 def draw_card(self,player: Player, draw_count: int = 2):
     # game engine will check the draw_pile count for each player to deal card

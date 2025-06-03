@@ -36,8 +36,30 @@ async def add_player_game_by_id(game_id: str,player: dict):
     else:
         raise HTTPException(status_code=404, detail=f"Failed to add player {player.get("name")} to the game {game_id} .")
 
-async def update_player(game_id: str, player_id: str, hand):
-    pass
+async def update_game_state(game_id: str, game_state:str):
+    update = await game_collection.find_one_and_update(
+        {"_id": ObjectId(game_id)},
+        {"$set": {"state": game_state}},
+        return_document=ReturnDocument.AFTER
+    )
+    if update is not None:
+        return update
+    else:
+        raise HTTPException(status_code=404, detail=f"Failed to update game state.")
+
+async def update_player_hand(game: Game):
+    update = await game_collection.find_one_and_update(
+        {"_id": ObjectId(game["_id"])},
+        {"$set": { "players": game["players"],
+                   "draw_pile": game["draw_pile"],
+                   "discard_pile": game["discard_pile"]}
+         },
+        return_document=ReturnDocument.AFTER
+    )
+    if update is not None:
+        return update
+    else:
+        raise HTTPException(status_code=404, detail=f"Failed to update game state.")
 
 
 
