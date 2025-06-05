@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional, Annotated
 from pydantic import BaseModel, BeforeValidator, Field
 from models.player import Player
-from models.cards import Card
+from models.cards import Card, PropertyColor
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 class GameState(str, Enum):
@@ -30,3 +30,10 @@ class GameJoinModel(BaseModel):
 class GameCollection(BaseModel):
     games: List[str]   # List of Game IDs
 
+class PlayerCardPlayRequest(BaseModel):
+    card_id: str
+    target_player_id: Optional[str] = None
+    target_property_color: Optional[PropertyColor] = None
+    target_property_id: Optional[str] = None
+    self_property_color: Optional[PropertyColor] = None
+    self_property_id: Optional[str] = None

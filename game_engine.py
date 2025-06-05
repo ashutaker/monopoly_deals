@@ -146,14 +146,22 @@ def draw_card(self,player: Player, draw_count: int = 2):
             player.add_to_hand(self.draw_pile.pop())
     print(f"{draw_count} cards added to {player.name}'s hand")
 
-def current_player(self) -> Player:
-    # returns current player
-    return self.players[self.current_player_id]
+def get_current_player(current_index: int, players: list[dict], player_id: str) -> dict:
+    for idx, player in enumerate(players):
+        if player["id"] == player_id and idx == current_index:
+            return player
+    return {}
+
+def is_valid_card(card_id: str, player_hand: list[str]) -> bool:
+    if card_id in player_hand:
+        return True
+    return False
 
 def next_player(self) -> Player:
     # pick next player in turn, set it to current player
     self.current_player_id = (self.current_player_id + 1) % len(self.players)
     return self.players[self.current_player_id]
+
 
 def process_action_card(self,action_card: Card, target_player: Optional[Player] = None) -> bool:
     # depending on the type of action card manage the money and properties etc
@@ -372,3 +380,4 @@ def check_winner(self) -> Optional[Player]:
     if complete_property_set == 3:
         return current_player
     return None
+

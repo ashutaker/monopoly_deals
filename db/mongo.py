@@ -15,7 +15,7 @@ async def create_game(game: Game):
     return created_game
 
 async def get_game_by_id(game_id):
-    if (existing_game := await game_collection.find_one({"_id": game_id})) is not None:
+    if (existing_game := await game_collection.find_one({"_id": ObjectId(game_id)})) is not None:
         return existing_game
     else:
         raise HTTPException(status_code=404, detail=f"Game {game_id} does not exist")
@@ -60,6 +60,12 @@ async def update_player_hand(game: Game):
         return update
     else:
         raise HTTPException(status_code=404, detail=f"Failed to update game state.")
+
+async def get_card(game: Game, card_id: str):
+    pass
+
+async  def update_current_player(game: Game):
+    pass
 
 
 
