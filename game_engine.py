@@ -123,7 +123,6 @@ def setup_deck() -> list[Card]:
         random.shuffle(cards)
         return cards
 
-
 def deal_cards(game: Game):
     # add 5 card to each player hand
     print("Dealing cards to players ...")

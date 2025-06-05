@@ -26,30 +26,29 @@ async def list_games():
     return GameCollection(games=await db.list_games())
 
 
-@app.put("/games/{game_id}/join",
+@app.post("/games/{game_id}/join",
          response_model=Game,
          description="Add player to a game")
 async def join_game(game_id: str, player: PlayerRequest = Body(...)):
-    player = {
-        k: v for k,v in player.model_dump(by_alias = True).items() if v is not None
-    }
-    new_player = Player(id=str(uuid.uuid4()),
-                        name= player["name"],
-                        )
-    if len(player) >= 1:
-        update_game = await db.add_player_game_by_id(
-            game_id = game_id,
-            player = new_player.model_dump(by_alias=True)
-        )
-        if update_game is not None:
+    existing_game = await db.get_game_by_id(game_id)
+    if existing_game["state"] == GameState.WAITING:
+        player = {
+            k: v for k,v in player.model_dump(by_alias = True).items() if v is not None
+        }
+        new_player = Player(id=str(uuid.uuid4()),
+                            name= player["name"],
+                            )
+        if len(player) >= 1:
+            update_game = await db.add_player_game_by_id(
+                game_id = game_id,
+                player = new_player.model_dump(by_alias=True)
+            )
             return update_game
-        else:
-            raise HTTPException(status_code=404, detail=f"Game {game_id} not found")
-    if(existing_game := db.get_game_by_id(game_id)) is not None:
-        return existing_game
-    raise HTTPException(status_code=400, detail=f"failed to add player")
+    else:
+        raise HTTPException(status_code=403,detail=f"Game {game_id} is not waiting for players to join.")
+    return existing_game
 
-@app.put("/games/{game_id}/start", response_model=Game)
+@app.post("/games/{game_id}/start", response_model=Game)
 async def start_game(game_id: str):
     update_state = await db.update_game_state(game_id, GameState.IN_PROGRESS.value)
     deal_cards = game_engine.deal_cards(update_state)
