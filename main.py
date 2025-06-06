@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Body, HTTPException
 import db.mongo as DB
 from game_engine import *
-from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest
+from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest, GameResponseModel
 from models.player import Player, PlayerRequest
 import game_engine
 
 app = FastAPI()
 
-@app.post("/game", response_model=Game)
+@app.post("/game", response_model=GameResponseModel)
 async def create_game(request: GameCreateModel):
     player_id = str(uuid.uuid4())
     player = Player(id=player_id,name= request.player_name)
@@ -27,7 +27,7 @@ async def list_games():
 
 
 @app.post("/games/{game_id}/join",
-         response_model=Game,
+         response_model=GameResponseModel,
          description="Add player to a game")
 async def join_game(game_id: str, player: PlayerRequest = Body(...)):
     existing_game = await DB.get_game_by_id(game_id)
@@ -48,7 +48,7 @@ async def join_game(game_id: str, player: PlayerRequest = Body(...)):
         raise HTTPException(status_code=403,detail=f"Game {game_id} is not waiting for players to join.")
     return existing_game
 
-@app.post("/games/{game_id}/start", response_model=Game)
+@app.post("/games/{game_id}/start", response_model=GameResponseModel)
 async def start_game(game_id: str):
     update_state = await DB.update_game_state(game_id, GameState.IN_PROGRESS.value)
     deal_card = deal_cards(update_state)
@@ -57,7 +57,7 @@ async def start_game(game_id: str):
     return update_game
 
 
-@app.post("/game/{game_id}/play", response_model= Game)
+@app.post("/game/{game_id}/play", response_model= GameResponseModel)
 async def play_card(game_id: str, request: PlayerCardPlayRequest,player_id: str):
     existing_game = await DB.get_game_by_id(game_id)
     card_id = request.card_id
