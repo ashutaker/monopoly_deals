@@ -130,6 +130,7 @@ def deal_cards(game: Game):
         for player in game["players"]:
             card = game["draw_pile"].pop()
             player["hand"].append(card)
+    game["action_remaining_per_turn"] = 3
     return game
 
 def draw_card(self,player: Player, draw_count: int = 2):

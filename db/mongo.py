@@ -47,12 +47,13 @@ async def update_game_state(game_id: str, game_state:str):
     else:
         raise HTTPException(status_code=404, detail=f"Failed to update game state.")
 
-async def update_player_hand(game: Game):
+async def update_card_play(game: Game):
     update = await game_collection.find_one_and_update(
         {"_id": ObjectId(game["_id"])},
         {"$set": { "players": game["players"],
                    "draw_pile": game["draw_pile"],
-                   "discard_pile": game["discard_pile"]}
+                   "discard_pile": game["discard_pile"],
+                   "action_remaining_per_turn": game["action_remaining_per_turn"]}
          },
         return_document=ReturnDocument.AFTER
     )
@@ -61,11 +62,18 @@ async def update_player_hand(game: Game):
     else:
         raise HTTPException(status_code=404, detail=f"Failed to update game state.")
 
-async def get_card(game: Game, card_id: str):
+async def get_card(game_id: str, card_id: str):
     pass
 
 async  def update_current_player(game: Game):
-    pass
+    update = await game_collection.find_one_and_update(
+        {"_id": ObjectId(game["_id"])},
+        {"$set": {"players": game["players"],
+                  "draw_pile": game["draw_pile"],
+                  "discard_pile": game["discard_pile"]}
+         },
+        return_document=ReturnDocument.AFTER
+    )
 
 
 
