@@ -121,7 +121,7 @@ def setup_deck() -> list[CardInDB]:
     random.shuffle(cards)
     return cards
 
-def deal_cards(game: Game):
+def deal_cards(game: dict) -> dict:
     # add 5 card to each player hand
     print("Dealing cards to players ...")
     for _ in range(5):

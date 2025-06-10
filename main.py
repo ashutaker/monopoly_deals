@@ -64,7 +64,7 @@ async def start_game(game_id: str):
 async def play_card(game_id: str, request: PlayerCardPlayRequest,player_id: str):
     existing_game = await DB.get_game_by_id(game_id)
     card_id = request.card_id
-    game = Game(**existing_game)
+    game = GameInDB(**existing_game)
     # check game state
     if game.state != GameState.IN_PROGRESS:
         raise HTTPException(status_code=400, detail="Game is not in progress.")
@@ -84,21 +84,36 @@ async def play_card(game_id: str, request: PlayerCardPlayRequest,player_id: str)
 
     # Handle Cards
     card = next(card for card in game.cards if card.id == card_id)
-    # // e53df64a-8854-4565-a9fc-7b6bcb06ce8d
-    # {'id': 'e53df64a-8854-4565-a9fc-7b6bcb06ce8d', 'name': 'Money: 10M', 'card_type': 'money', 'value': 10}
+    player = game.players[current_player_index]
     ## collect money
-
-    if card.card_type== CardType.MONEY:
+    if card.card_type == CardType.MONEY:
         # existing_game["players"][current_player_index]["hand"].remove(card_id)
         game.players[current_player_index].hand.remove(card_id)
         game.players[current_player_index].money_pile.append(card_id)
         game.action_remaining_per_turn -= 1
-        card_play = await DB.update_card_play(game)
+        card_play = await DB.update_card_play(game.model_dump(by_alias=True))
         return card_play
 
     ## play property
-    if card.card_type in [CardType.PROPERTY, CardType.WILD_PROPERTY]:
-        print("ITs PROPERTY")
+    if card.card_type == CardType.PROPERTY:
+        print(card)
+        property_card = card
+        color = property_card.color
+        if color not in player.property_set:
+            player.property_set[color] = []
+        player.hand.remove(card_id)
+        player.property_set[color].append(card_id)
+        game.action_remaining_per_turn -= 1
+        game.players[current_player_index] = player
+        property_played = await DB.update_card_play(game.model_dump(by_alias=True))
+        return property_played
+    if card.card_type == CardType.WILD_PROPERTY:
+        wild_property = card
+        if not request.self_property_color:
+            raise HTTPException(status_code=400, detail="Property color must be specified for wild property card")
+        if request.self_property_color not in wild_property.colors:
+            raise HTTPException(status_code=400, detail="Invalid color specified for wild property card")
+
     ## play action
     if card.card_type in CardType.ACTION:
         print("ACTION TIME")
