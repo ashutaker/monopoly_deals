@@ -77,3 +77,13 @@ class RentCard(Card):
 
 class ActionCard(Card):
     action_type: ActionCardType
+
+class CardInDB(BaseModel):
+    id: str
+    name: str
+    card_type: CardType
+    value: int = 0
+    action_type: Optional[ActionCardType]  = None
+    color: Optional[PropertyColor]  = None
+    colors: Optional[List[PropertyColor]] = None
+    assigned_color: Optional[PropertyColor] = None

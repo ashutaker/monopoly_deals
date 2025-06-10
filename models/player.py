@@ -1,7 +1,7 @@
 from typing import List, Annotated, Dict
 from pydantic import BaseModel, BeforeValidator, Field
 
-from core.cards import PropertyColor
+from models.cards import PropertyColor
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 

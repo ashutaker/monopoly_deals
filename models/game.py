@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional, Annotated
 from pydantic import BaseModel, BeforeValidator, Field
 from models.player import Player, PlayerInGameResponse
-from models.cards import Card, PropertyColor
+from models.cards import Card, PropertyColor, CardInDB
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 class GameState(str, Enum):
@@ -21,6 +21,17 @@ class Game(BaseModel):
     current_player_index: int = 0
     action_remaining_per_turn: int = 0
 
+class GameInDB(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    players: List[Player] = []
+    draw_pile: List[str] = []
+    discard_pile: List[str] = []
+    state: GameState = GameState.WAITING
+    winner: Optional[str] = None
+    cards: List[CardInDB] = []
+    current_player_index: int = 0
+    action_remaining_per_turn: int = 0
+
 class GameResponseModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     players: List[PlayerInGameResponse] = []
@@ -28,7 +39,6 @@ class GameResponseModel(BaseModel):
     discard_pile: List[str] = []
     state: GameState
     winner: Optional[str] = None
-    # cards: List[Card] = []
     current_player_index: int = 0
     action_remaining_per_turn: int = 0
 
