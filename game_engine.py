@@ -147,13 +147,13 @@ def draw_card(self,player: Player, draw_count: int = 2):
             player.add_to_hand(self.draw_pile.pop())
     print(f"{draw_count} cards added to {player.name}'s hand")
 
-def get_current_player(current_index: int, players: list[dict], player_id: str) -> dict:
+def get_current_player(current_index: int, players: list[Player], player_id: str) -> Player:
     for idx, player in enumerate(players):
-        if player["id"] == player_id and idx == current_index:
+        if player.id == player_id and idx == current_index:
             return player
-    return {}
+    return None
 
-def is_valid_card(card_id: str, player_hand: list[str]) -> bool:
+def is_valid_card(card_id: str, player_hand: list[Card]) -> bool:
     if card_id in player_hand:
         return True
     return False

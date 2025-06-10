@@ -62,42 +62,42 @@ async def play_card(game_id: str, request: PlayerCardPlayRequest,player_id: str)
     existing_game = await DB.get_game_by_id(game_id)
     card_id = request.card_id
     game = Game(**existing_game)
-    # check game state and
-    print(f"existing game state : {existing_game["state"]}")
-    if existing_game["state"] != GameState.IN_PROGRESS:
+    # check game state
+    if game.state != GameState.IN_PROGRESS:
         raise HTTPException(status_code=400, detail="Game is not in progress.")
     # player validity
-    if not any(player["id"] == player_id for player in existing_game["players"]):
+    if not any(player.id == player_id for player in game.players):
         raise HTTPException(status_code=404, detail=f"Player ID: {player_id} not found in the game {game_id}")
     # check player turn
-    current_player_index = int(existing_game["current_player_index"])
+    current_player_index = int(game.current_player_index)
     current_player = get_current_player(current_index=current_player_index,
-                                        players=existing_game["players"],
+                                        players= game.players,
                                         player_id=player_id)
     if not current_player:
         raise HTTPException(status_code=400, detail="Not your turn")
     # check card validity
-    if not is_valid_card(card_id=card_id,player_hand=current_player.get("hand")):
+    if not is_valid_card(card_id=card_id,player_hand=current_player.hand):
         raise HTTPException(status_code=400, detail="Card not found in player hand")
 
     # Handle Cards
-    card = next(card for card in existing_game["cards"] if card["id"] == card_id)
+    card = next(card for card in game.cards if card.id == card_id)
     # // e53df64a-8854-4565-a9fc-7b6bcb06ce8d
     # {'id': 'e53df64a-8854-4565-a9fc-7b6bcb06ce8d', 'name': 'Money: 10M', 'card_type': 'money', 'value': 10}
     ## collect money
 
-    if card.get("card_type") == CardType.MONEY:
-        existing_game["players"][current_player_index]["hand"].remove(card_id)
-        existing_game["players"][current_player_index]["money_pile"].append(card_id)
-        existing_game["action_remaining_per_turn"] -= 1
-        card_play = await DB.update_card_play(existing_game)
+    if card.card_type== CardType.MONEY:
+        # existing_game["players"][current_player_index]["hand"].remove(card_id)
+        game.players[current_player_index].hand.remove(card_id)
+        game.players[current_player_index].money_pile.append(card_id)
+        game.action_remaining_per_turn -= 1
+        card_play = await DB.update_card_play(game)
         return card_play
 
     ## play property
-    if card.get("card_type") in [CardType.PROPERTY, CardType.WILD_PROPERTY]:
+    if card.card_type in [CardType.PROPERTY, CardType.WILD_PROPERTY]:
         print("ITs PROPERTY")
     ## play action
-    if card.get("card_type") in CardType.ACTION:
+    if card.card_type in CardType.ACTION:
         print("ACTION TIME")
 
     return existing_game
