@@ -2,14 +2,14 @@ from bson import ObjectId
 from fastapi import HTTPException
 from pymongo.asynchronous.collection import ReturnDocument
 import motor.motor_asyncio
-from models.game import Game
+from models.game import Game, GameInDB
 
 MONGODB_URL="mongodb://localhost:27017/"
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
 db = client.get_database("monopoly_deals")
 game_collection = db.get_collection("games")
 
-async def create_game(game: Game):
+async def create_game(game: dict):
     new_game = await game_collection.insert_one(game.model_dump(by_alias=True, exclude=["id"]))
     created_game = await game_collection.find_one({"_id": new_game.inserted_id})
     return created_game
@@ -47,7 +47,7 @@ async def update_game_state(game_id: str, game_state:str):
     else:
         raise HTTPException(status_code=404, detail=f"Failed to update game state.")
 
-async def update_card_play(game: Game):
+async def update_card_play(game: dict):
     update = await game_collection.find_one_and_update(
         {"_id": ObjectId(game["_id"])},
         {"$set": { "players": game["players"],
@@ -65,7 +65,7 @@ async def update_card_play(game: Game):
 async def get_card(game_id: str, card_id: str):
     pass
 
-async  def update_current_player(game: Game):
+async  def update_current_player(game: dict):
     update = await game_collection.find_one_and_update(
         {"_id": ObjectId(game["_id"])},
         {"$set": {"players": game["players"],
