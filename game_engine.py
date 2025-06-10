@@ -9,119 +9,117 @@ from models.cards import *
 from core.player import Player
 
 
-def setup_deck() -> list[Card]:
-        cards : list[Card] = []
-        # # Create complete deck of the playable cards and add them to draw pile
-        # # shuffle the pile before dealing cards to player
-        # ## Action Cards x 34
-        action_cards = [ # action, value, count
-            (ActionCardType.DEAL_BREAKER, 5, 2),
-            (ActionCardType.FORCED_DEAL, 3, 3),
-            (ActionCardType.SLY_DEAL, 3, 3),
-            (ActionCardType.JUST_SAY_NO, 4, 3),
-            (ActionCardType.DEBT_COLLECTOR, 3, 3),
-            (ActionCardType.ITS_MY_BIRTHDAY, 2, 3),
-            (ActionCardType.PASS_GO, 1, 10),
-            (ActionCardType.HOUSE, 3, 3),
-            (ActionCardType.HOTEL, 4, 2),
-            (ActionCardType.DOUBLE_RENT, 1, 2)
-        ]
-        for action,value,count in action_cards:
-            cards.extend([ActionCard(
-                id=str(uuid.uuid4()),
-                card_type= CardType.ACTION,
-                action_type = action,
-                name=f"Action : {action.name}",
-                value = value
-            ) for _ in range(count)])
-
-
-
-        # ## Property Cards x 28
-        for color in PropertyColor:
-            property_value = 1 if color in [PropertyColor.BROWN, PropertyColor.LIGHT_BLUE] else \
-                            2 if color in [PropertyColor.PINK, PropertyColor.ORANGE] else \
-                            3 if color in [PropertyColor.RED, PropertyColor.YELLOW] else \
-                            4 if color in [PropertyColor.GREEN, PropertyColor.DARK_BLUE] else \
-                            2 if color in [PropertyColor.RAILROAD, PropertyColor.UTILITY] else 0
-            for _ in range(PROPERTY_SET_SIZE[color]):
-                cards.append(PropertyCard(
-                    card_type= CardType.PROPERTY,
-                    id = str(uuid.uuid4()),
-                    value= property_value,
-                    name=f"Property: {color.name}",
-                    color = color
-                ))
-
-        # ## Wild Property Cards x 11
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()),name="Property: Dark Blue/Green", value = 4,
-                                      card_type= CardType.WILD_PROPERTY,colors=[PropertyColor.DARK_BLUE,PropertyColor.GREEN]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Light Blue/ Brown", value=1,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.LIGHT_BLUE, PropertyColor.BROWN]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Orange/Pink", value=2,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.ORANGE,PropertyColor.PINK]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Orange/Pink", value=2,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.ORANGE, PropertyColor.PINK]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: RailRoad/Green", value=4,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.RAILROAD, PropertyColor.GREEN]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: RailRoad/light blue", value=4,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.RAILROAD, PropertyColor.LIGHT_BLUE]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: RailRoad/utility", value=2,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.RAILROAD, PropertyColor.UTILITY]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=3,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.RED, PropertyColor.YELLOW]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=3,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[PropertyColor.RED, PropertyColor.YELLOW]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=0,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[color for color in PropertyColor]))
-        cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=0,
-                                      card_type=CardType.WILD_PROPERTY,
-                                      colors=[color for color in PropertyColor]))
-
-        # ## Rent Cards x 13
-        for _ in range(2):
-            for color_set in [[PropertyColor.DARK_BLUE, PropertyColor.GREEN],
-                              [PropertyColor.LIGHT_BLUE, PropertyColor.BROWN],
-                              [PropertyColor.ORANGE,PropertyColor.PINK],
-                              [PropertyColor.RAILROAD, PropertyColor.UTILITY],
-                              [PropertyColor.RED, PropertyColor.YELLOW]]:
-                card_id = str(uuid.uuid4())
-                card = RentCard(
-                    id = card_id,
-                    name = f"Rent : {"/".join([c.name for c in color_set])}",
-                    card_type=CardType.RENT,
-                    colors= color_set,
-                    value= 1
-                )
-                cards.append(card)
-        cards.extend([RentCard(
+def setup_deck() -> list[CardInDB]:
+    cards : list[CardInDB] = []
+    # # Create complete deck of the playable cards and add them to draw pile
+    # # shuffle the pile before dealing cards to player
+    # ## Action Cards x 34
+    action_cards = [ # action, value, count
+        (ActionCardType.DEAL_BREAKER, 5, 2),
+        (ActionCardType.FORCED_DEAL, 3, 3),
+        (ActionCardType.SLY_DEAL, 3, 3),
+        (ActionCardType.JUST_SAY_NO, 4, 3),
+        (ActionCardType.DEBT_COLLECTOR, 3, 3),
+        (ActionCardType.ITS_MY_BIRTHDAY, 2, 3),
+        (ActionCardType.PASS_GO, 1, 10),
+        (ActionCardType.HOUSE, 3, 3),
+        (ActionCardType.HOTEL, 4, 2),
+        (ActionCardType.DOUBLE_RENT, 1, 2)
+    ]
+    for action,value,count in action_cards:
+        cards.extend([ActionCard(
             id=str(uuid.uuid4()),
-            name=f"Wild Rent",
-            card_type=CardType.RENT,
-            value=3
-        ) for _ in range(3)]) # all color
+            card_type= CardType.ACTION,
+            action_type = action,
+            name=f"Action : {action.name}",
+            value = value
+        ).model_dump()
+        for _ in range(count)]
+    )
+    # ## Property Cards x 28
+    for color in PropertyColor:
+        property_value = 1 if color in [PropertyColor.BROWN, PropertyColor.LIGHT_BLUE] else \
+                        2 if color in [PropertyColor.PINK, PropertyColor.ORANGE] else \
+                        3 if color in [PropertyColor.RED, PropertyColor.YELLOW] else \
+                        4 if color in [PropertyColor.GREEN, PropertyColor.DARK_BLUE] else \
+                        2 if color in [PropertyColor.RAILROAD, PropertyColor.UTILITY] else 0
+        for _ in range(PROPERTY_SET_SIZE[color]):
+            cards.append(PropertyCard(
+                card_type= CardType.PROPERTY,
+                id = str(uuid.uuid4()),
+                value= property_value,
+                name=f"Property: {color.name}",
+                color = color
+            ).model_dump()
+            )
 
-        ## Money Cards x20
-        for value, count in [(10,1), (5,2), (4,3), (3,3), (2,5), (1,6)]:
-            for _ in range(count):
-                card_id = str(uuid.uuid4())
-                card = Card(
-                    id=card_id,
-                    name= f"Money: {value}M",
-                    card_type=CardType.MONEY,
-                    value=value)
-                cards.append(card)
-        random.shuffle(cards)
-        return cards
+    # ## Wild Property Cards x 11
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()),name="Property: Dark Blue/Green", value = 4,
+                                  card_type= CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.DARK_BLUE,PropertyColor.GREEN]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Light Blue/ Brown", value=1,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.LIGHT_BLUE, PropertyColor.BROWN]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Orange/Pink", value=2,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.ORANGE,PropertyColor.PINK]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Orange/Pink", value=2,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.ORANGE, PropertyColor.PINK]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: RailRoad/Green", value=4,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.RAILROAD, PropertyColor.GREEN]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: RailRoad/light blue", value=4,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.RAILROAD, PropertyColor.LIGHT_BLUE]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: RailRoad/utility", value=2,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.RAILROAD, PropertyColor.UTILITY]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=3,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.RED, PropertyColor.YELLOW]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=3,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[PropertyColor.RED, PropertyColor.YELLOW]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=0,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[color for color in PropertyColor]).model_dump())
+    cards.append(WildPropertyCard(id=str(uuid.uuid4()), name="Property: Red/Yellow", value=0,
+                                  card_type=CardType.WILD_PROPERTY,
+                                  colors=[color for color in PropertyColor]).model_dump())
+
+    # ## Rent Cards x 13
+    for _ in range(2):
+        for color_set in [[PropertyColor.DARK_BLUE, PropertyColor.GREEN],
+                          [PropertyColor.LIGHT_BLUE, PropertyColor.BROWN],
+                          [PropertyColor.ORANGE,PropertyColor.PINK],
+                          [PropertyColor.RAILROAD, PropertyColor.UTILITY],
+                          [PropertyColor.RED, PropertyColor.YELLOW]]:
+            cards.append(RentCard(
+                id = str(uuid.uuid4()),
+                name = f"Rent : {"/".join([c.name for c in color_set])}",
+                card_type=CardType.RENT,
+                colors= color_set,
+                value= 1
+            ).model_dump())
+    cards.extend([RentCard(
+        id=str(uuid.uuid4()),
+        name=f"Wild Rent",
+        card_type=CardType.RENT,
+        value=3
+        ).model_dump() for _ in range(3)]
+    ) # all color
+
+    ## Money Cards x20
+    for value, count in [(10,1), (5,2), (4,3), (3,3), (2,5), (1,6)]:
+        for _ in range(count):
+            cards.append(Card(
+                id=str(uuid.uuid4()),
+                name= f"Money: {value}M",
+                card_type=CardType.MONEY,
+                value=value).model_dump())
+    random.shuffle(cards)
+    return cards
 
 def deal_cards(game: Game):
     # add 5 card to each player hand
