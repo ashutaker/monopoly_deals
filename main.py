@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Body, HTTPException
 import db.mongo as DB
 from game_engine import *
-from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest, GameResponseModel
+from models.cards import Card
+from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest, GameResponseModel, \
+    GameInDB
 from models.player import Player, PlayerRequest
 import game_engine
 
@@ -11,9 +13,9 @@ app = FastAPI()
 async def create_game(request: GameCreateModel):
     player_id = str(uuid.uuid4())
     player = Player(id=player_id,name= request.player_name)
-    card_deck = game_engine.setup_deck()
-    draw_pile = [card.id for card in card_deck]
-    game = Game(players = [player], cards= card_deck,draw_pile=draw_pile)
+    cards_in_db = game_engine.setup_deck()
+    draw_pile = [card.id for card in cards_in_db]
+    game = GameInDB(players = [player], cards= cards_in_db, draw_pile=draw_pile)
     created_game = await DB.create_game(game)
     return created_game
 
@@ -29,31 +31,32 @@ async def list_games():
 @app.post("/games/{game_id}/join",
          response_model=GameResponseModel,
          description="Add player to a game")
-async def join_game(game_id: str, player: PlayerRequest = Body(...)):
-    existing_game = await DB.get_game_by_id(game_id)
-    if existing_game["state"] == GameState.WAITING:
-        player = {
-            k: v for k,v in player.model_dump(by_alias = True).items() if v is not None
-        }
+async def join_game(game_id: str, request: PlayerRequest = Body(...)):
+    existing_game = GameInDB(**(await DB.get_game_by_id(game_id)))
+    if existing_game.state == GameState.WAITING:
+        # player = {
+        #     k: v for k,v in request.model_dump(by_alias = True).items() if v is not None
+        # }
         new_player = Player(id=str(uuid.uuid4()),
-                            name= player["name"],
+                            name= request.name,
                             )
-        if len(player) >= 1:
-            update_game = await DB.add_player_game_by_id(
-                game_id = game_id,
-                player = new_player.model_dump(by_alias=True)
-            )
-            return update_game
+
+        update_game = await DB.add_player_game_by_id(
+            game_id = game_id,
+            player = new_player.model_dump(by_alias=True)
+        )
+        return update_game
     else:
         raise HTTPException(status_code=403,detail=f"Game {game_id} is not waiting for players to join.")
-    return existing_game
 
 @app.post("/games/{game_id}/start", response_model=GameResponseModel)
 async def start_game(game_id: str):
+    existing_game = GameInDB(**(await DB.get_game_by_id(game_id)))
+    if len(existing_game.players) < 2:
+        raise HTTPException(status_code=400,detail=f"Need 2 or more players to start the game")
     update_state = await DB.update_game_state(game_id, GameState.IN_PROGRESS.value)
     deal_card = deal_cards(update_state)
     update_game = await DB.update_card_play(deal_card)
-
     return update_game
 
 
