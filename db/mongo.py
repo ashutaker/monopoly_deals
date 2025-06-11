@@ -9,7 +9,7 @@ client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
 db = client.get_database("monopoly_deals")
 game_collection = db.get_collection("games")
 
-async def create_game(game: dict):
+async def create_game(game: GameInDB):
     new_game = await game_collection.insert_one(game.model_dump(by_alias=True, exclude=["id"]))
     created_game = await game_collection.find_one({"_id": new_game.inserted_id})
     return created_game
@@ -61,6 +61,18 @@ async def update_card_play(game: dict):
         return update
     else:
         raise HTTPException(status_code=404, detail=f"Failed to update game state.")
+
+async def update_wild_property(game_id, wild_property):
+    update = await game_collection.update_one(
+        {"_id": ObjectId(game_id)},
+        {"$set": { "cards.$[card].assigned_color": wild_property.assigned_color }},
+        array_filters= [{"card.id": wild_property.id}]
+    )
+    print(update)
+    if update.modified_count:
+        print(update)
+    else:
+        raise HTTPException(status_code=404, detail=f"Failed to update wild property card.")
 
 async def get_card(game_id: str, card_id: str):
     pass

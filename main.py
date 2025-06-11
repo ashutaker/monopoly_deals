@@ -14,7 +14,7 @@ async def create_game(request: GameCreateModel):
     player_id = str(uuid.uuid4())
     player = Player(id=player_id,name= request.player_name)
     cards_in_db = game_engine.setup_deck()
-    draw_pile = [card.id for card in cards_in_db]
+    draw_pile = [card["id"] for card in cards_in_db]
     game = GameInDB(players = [player], cards= cards_in_db, draw_pile=draw_pile)
     created_game = await DB.create_game(game)
     return created_game
@@ -61,9 +61,9 @@ async def start_game(game_id: str):
 
 
 @app.post("/game/{game_id}/play", response_model= GameResponseModel)
-async def play_card(game_id: str, request: PlayerCardPlayRequest,player_id: str):
+async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id: str):
     existing_game = await DB.get_game_by_id(game_id)
-    card_id = request.card_id
+    card_id = card_request.card_id
     game = GameInDB(**existing_game)
     # check game state
     if game.state != GameState.IN_PROGRESS:
@@ -109,11 +109,20 @@ async def play_card(game_id: str, request: PlayerCardPlayRequest,player_id: str)
         return property_played
     if card.card_type == CardType.WILD_PROPERTY:
         wild_property = card
-        if not request.self_property_color:
+        if not card_request.self_property_color:
             raise HTTPException(status_code=400, detail="Property color must be specified for wild property card")
-        if request.self_property_color not in wild_property.colors:
+        if card_request.self_property_color not in wild_property.colors:
             raise HTTPException(status_code=400, detail="Invalid color specified for wild property card")
-
+        wild_property.assigned_color = card_request.self_property_color
+        if wild_property.assigned_color not in player.property_set:
+            player.property_set[wild_property.assigned_color] = []
+        print("its wild wild")
+        player.hand.remove(card_id)
+        player.property_set[wild_property.assigned_color].append(card_id)
+        game.action_remaining_per_turn -= 1
+        await update_wild_property(game_id,wild_property)
+        wild_property_played = await DB.update_card_play(game.model_dump(by_alias=True))
+        return wild_property_played
     ## play action
     if card.card_type in CardType.ACTION:
         print("ACTION TIME")
