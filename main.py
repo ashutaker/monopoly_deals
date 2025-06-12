@@ -109,5 +109,13 @@ async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id
     ## play action
     if card.card_type in CardType.ACTION:
         print("ACTION TIME")
+        if card.action_type in [ActionCardType.PASS_GO,ActionCardType.ITS_MY_BIRTHDAY]:
+            play_action_card(game,action_card=card)
+            game.action_remaining_per_turn -= 1
+        action_played = await update_card_play(game.model_dump(by_alias=True))
+        return action_played
+
+    if card.card_type in [CardType.RENT, CardType.WILD_RENT]:
+        print("time to pay rent")
 
     return existing_game
