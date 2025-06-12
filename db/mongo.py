@@ -68,8 +68,7 @@ async def update_wild_property(game_id, wild_property):
         {"$set": { "cards.$[card].assigned_color": wild_property.assigned_color }},
         array_filters= [{"card.id": wild_property.id}]
     )
-    print(update)
-    if update.modified_count:
+    if update.acknowledged:
         print(update)
     else:
         raise HTTPException(status_code=404, detail=f"Failed to update wild property card.")

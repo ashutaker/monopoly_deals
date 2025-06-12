@@ -6,7 +6,8 @@ from typing import Optional
 from db.mongo import *
 from core.util import *
 from models.cards import *
-from core.player import Player
+from models.game import PlayerCardPlayRequest
+from models.player import Player
 
 
 def setup_deck() -> list[CardInDB]:
@@ -151,7 +152,7 @@ def get_current_player(current_index: int, players: list[Player], player_id: str
             return player
     return None
 
-def is_valid_card(card_id: str, player_hand: list[Card]) -> bool:
+def is_valid_card(card_id: str, player_hand: list[str]) -> bool:
     if card_id in player_hand:
         return True
     return False
@@ -160,6 +161,34 @@ def next_player(self) -> Player:
     # pick next player in turn, set it to current player
     self.current_player_id = (self.current_player_id + 1) % len(self.players)
     return self.players[self.current_player_id]
+
+def play_property(card_request: PlayerCardPlayRequest, card: CardInDB ,player: Player):
+    print(card_request)
+    card_id = card_request.card_id
+    if card.card_type == CardType.PROPERTY:
+        property_card = card
+        color = property_card.color
+        if color not in player.property_set:
+            player.property_set[color] = []
+        player.hand.remove(card_id)
+        player.property_set[color].append(card_id)
+        return  True
+
+    if card.card_type == CardType.WILD_PROPERTY:
+        wild_property = card
+        if not card_request.self_property_color:
+            raise HTTPException(status_code=400, detail="Property color must be specified for wild property card")
+        if card_request.self_property_color not in wild_property.colors:
+            raise HTTPException(status_code=400, detail="Invalid color specified for wild property card")
+
+        wild_property.assigned_color = card_request.self_property_color
+        if wild_property.assigned_color not in player.property_set:
+            player.property_set[wild_property.assigned_color] = []
+        print("its wild wild")
+        player.hand.remove(card_id)
+        player.property_set[wild_property.assigned_color].append(card_id)
+        return True
+    return False
 
 
 def process_action_card(self,action_card: Card, target_player: Optional[Player] = None) -> bool:

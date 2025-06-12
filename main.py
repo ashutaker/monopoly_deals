@@ -95,34 +95,17 @@ async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id
         return card_play
 
     ## play property
-    if card.card_type == CardType.PROPERTY:
-        print(card)
-        property_card = card
-        color = property_card.color
-        if color not in player.property_set:
-            player.property_set[color] = []
-        player.hand.remove(card_id)
-        player.property_set[color].append(card_id)
-        game.action_remaining_per_turn -= 1
-        game.players[current_player_index] = player
-        property_played = await DB.update_card_play(game.model_dump(by_alias=True))
-        return property_played
-    if card.card_type == CardType.WILD_PROPERTY:
-        wild_property = card
-        if not card_request.self_property_color:
-            raise HTTPException(status_code=400, detail="Property color must be specified for wild property card")
-        if card_request.self_property_color not in wild_property.colors:
-            raise HTTPException(status_code=400, detail="Invalid color specified for wild property card")
-        wild_property.assigned_color = card_request.self_property_color
-        if wild_property.assigned_color not in player.property_set:
-            player.property_set[wild_property.assigned_color] = []
-        print("its wild wild")
-        player.hand.remove(card_id)
-        player.property_set[wild_property.assigned_color].append(card_id)
-        game.action_remaining_per_turn -= 1
-        await update_wild_property(game_id,wild_property)
-        wild_property_played = await DB.update_card_play(game.model_dump(by_alias=True))
-        return wild_property_played
+    if card.card_type in [CardType.PROPERTY, CardType.WILD_PROPERTY]:
+        if play_property(card_request, card, player):
+            game.action_remaining_per_turn -= 1
+            game.players[current_player_index] = player
+            if card.card_type == CardType.WILD_PROPERTY:
+                await update_wild_property(game_id, card)
+            property_played = await DB.update_card_play(game.model_dump(by_alias=True))
+            return property_played
+        else:
+            raise HTTPException(status_code=400, detail="Failed to play property.")
+
     ## play action
     if card.card_type in CardType.ACTION:
         print("ACTION TIME")
