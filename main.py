@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Body, HTTPException
 import db.mongo as DB
 from game_engine import *
-from models.cards import Card
 from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest, GameResponseModel, \
     GameInDB
 from models.player import Player, PlayerRequest
@@ -111,7 +110,7 @@ async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id
         print("ACTION TIME")
         if card.action_type in [ActionCardType.PASS_GO,ActionCardType.ITS_MY_BIRTHDAY]:
             play_action_card(game,action_card=card)
-            game.action_remaining_per_turn -= 1
+            game.update_remaining_actions()
         action_played = await update_card_play(game.model_dump(by_alias=True))
         return action_played
 
