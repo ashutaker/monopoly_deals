@@ -152,6 +152,7 @@ def get_current_player(current_index: int, players: list[Player], player_id: str
             return player
     return None
 
+
 def is_valid_card(card_id: str, player_hand: list[str]) -> bool:
     if card_id in player_hand:
         return True

@@ -32,6 +32,11 @@ class GameInDB(BaseModel):
     current_player_index: int = 0
     action_remaining_per_turn: int = 0
 
+    def update_remaining_actions(self):
+        self.action_remaining_per_turn -= 1
+        if self.action_remaining_per_turn == 0:
+            self.current_player_index = (self.current_player_index + 1) % (len(self.players))
+
 class GameResponseModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     players: List[PlayerInGameResponse] = []
