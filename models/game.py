@@ -1,4 +1,5 @@
 from enum import Enum
+from random import random
 from typing import List, Optional, Annotated
 from pydantic import BaseModel, BeforeValidator, Field
 from models.player import Player, PlayerInGameResponse
@@ -64,6 +65,24 @@ class GameInDB(BaseModel):
         self.action_remaining_per_turn= 3
         return self
 
+    def draw_card(self, player: Player, draw_count: int):
+        # game engine will check the draw_pile count for each player to deal card
+        # to them default is 2 for start of turn and PASS GO
+        for _ in range(draw_count):
+            if not self.draw_pile:
+                print("No cards left in draw pile. Reshuffling discard pile back to draw pile !!")
+                self.draw_pile = self.discard_pile
+                self.discard_pile = []
+                random.shuffle(self.draw_pile)
+                print("Done reshuffling !!!")
+            if self.draw_pile:
+                player.hand.append(self.draw_pile.pop())
+        print(f"{draw_count} cards added to {player.name}'s hand")
+
+    def discard_card(self, player_id: str, card_id: str):
+        player = next(player for player in self.players if player.id == player_id)
+        player.hand.remove(card_id)
+        self.draw_pile.append(card_id)
 class GameResponseModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     players: List[PlayerInGameResponse] = []
