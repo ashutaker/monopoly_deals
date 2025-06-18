@@ -1,10 +1,16 @@
-from fastapi import FastAPI, Body, HTTPException
+from uuid import uuid4
+from fastapi import FastAPI, Body, Response, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+
 import db.mongo as DB
 from game_engine import *
 from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest, GameResponseModel, \
     GameInDB, PlayerCardSDiscardRequest
 from models.player import Player, PlayerRequest
 import game_engine
+from sessions.session import SessionData, backend, cookie, verifier
+
+origins=["http://localhost:5173"]
 
 app = FastAPI()
 app.add_middleware(
@@ -17,14 +23,26 @@ app.add_middleware(
 
 
 @app.post("/game", response_model=GameResponseModel)
-async def create_game(request: GameCreateModel):
+async def create_game(request: GameCreateModel, response: Response):
     player_id = str(uuid.uuid4())
     player = Player(id=player_id,name= request.player_name)
     cards_in_db = game_engine.setup_deck()
     draw_pile = [card["id"] for card in cards_in_db]
     game = GameInDB(players = [player], cards= cards_in_db, draw_pile=draw_pile)
+
+    session = uuid4()
+    print(session)
+    session_data = SessionData(player_id=player_id)
+    await backend.create(session,session_data)
+
     created_game = await DB.create_game(game)
+    cookie.attach_to_response(response,session)
+
     return created_game
+
+@app.get("/whoami", dependencies=[Depends(cookie)])
+async def whoami(session_data: SessionData = Depends(verifier)):
+    return session_data
 
 @app.get(
     "/games",
