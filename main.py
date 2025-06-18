@@ -2,11 +2,19 @@ from fastapi import FastAPI, Body, HTTPException
 import db.mongo as DB
 from game_engine import *
 from models.game import Game, GameCreateModel, GameCollection, GameState, PlayerCardPlayRequest, GameResponseModel, \
-    GameInDB
+    GameInDB, PlayerCardSDiscardRequest
 from models.player import Player, PlayerRequest
 import game_engine
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+   allow_origins=origins,
+   allow_credentials= True,
+   allow_methods=["*"],
+   allow_headers=["*"]
+)
+
 
 @app.post("/game", response_model=GameResponseModel)
 async def create_game(request: GameCreateModel):
@@ -121,3 +129,8 @@ async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id
         existing_game = await DB.update_game_state(game_id,game.state)
 
     return existing_game
+
+@app.post("/game/{game_id}/discard",response_model= GameResponseModel)
+async def discard_card(game_id: str, discard_request: PlayerCardSDiscardRequest, player_id):
+    existing_game = GameInDB(**(await DB.get_game_by_id(game_id)))
+    existing_game.discard_card()
