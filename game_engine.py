@@ -383,33 +383,7 @@ def collect_money(self, from_player: Player, to_player: Player, amount: int) -> 
         money_transferred =  sum(card.value for card in from_player.money_pile)
     return money_transferred
 
-def get_game_state(self):
-    # Shows all player money and property
-    pass
 
-def display_player_hand(self,player: Player):
-    print(f"\n{player.name}'s hand", "-" * 20)
-    for i, card in enumerate(player.hand):
-        print(f"{i+1} - {card}")
 
-def display_player_properties(self,player: Player):
-    if player.property_sets:
-        print(f"\n{player.name}'s Property in play","-" * 20)
-        for color, (current_size,required_size) in player.get_owned_property_info().items():
-            properties = player.property_sets[color]
-            print(f"{color.name} : {current_size}/{required_size}")
-            print([card.name for card in properties])
-    else:
-        print(f"\n{player.name} has no properties in play.")
 
-def check_winner(self) -> Optional[Player]:
-    # check propertyset of each player before changing turn
-    current_player = self.current_player()
-    complete_property_set = 0
-    for color in current_player.property_sets:
-        if current_player.has_full_propertyset(color):
-            complete_property_set +=1
-    if complete_property_set == 3:
-        return current_player
-    return None
 

@@ -109,3 +109,6 @@ class PlayerCardPlayRequest(BaseModel):
     target_property_id: Optional[str] = None
     self_property_color: Optional[PropertyColor] = None
     self_property_id: Optional[str] = None
+
+class PlayerCardSDiscardRequest(BaseModel):
+    id: str

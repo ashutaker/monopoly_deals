@@ -12,6 +12,10 @@ class Player(BaseModel):
     money_pile : List[str] = []
     property_set : Dict[PropertyColor, List[str]] = {} # Property color > Card ID
 
+    def has_complete_property_set(self,color: PropertyColor):
+        set_size = PROPERTY_SET_SIZE[color]
+        return len(self.property_set[color]) >= set_size
+
 class PlayerRequest(BaseModel):
     name : str = Field(...)
 
