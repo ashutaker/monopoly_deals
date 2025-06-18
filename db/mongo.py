@@ -53,7 +53,8 @@ async def update_card_play(game: dict):
         {"$set": { "players": game["players"],
                    "draw_pile": game["draw_pile"],
                    "discard_pile": game["discard_pile"],
-                   "action_remaining_per_turn": game["action_remaining_per_turn"]}
+                   "action_remaining_per_turn": game["action_remaining_per_turn"],
+                   "current_player_index": game["current_player_index"]}
          },
         return_document=ReturnDocument.AFTER
     )

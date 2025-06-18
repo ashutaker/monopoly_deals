@@ -53,14 +53,16 @@ async def start_game(game_id: str):
     existing_game = GameInDB(**(await DB.get_game_by_id(game_id)))
     if len(existing_game.players) < 2:
         raise HTTPException(status_code=400,detail=f"Need 2 or more players to start the game")
-    update_state = await DB.update_game_state(game_id, GameState.IN_PROGRESS.value)
-    deal_card = deal_cards(update_state)
-    update_game = await DB.update_card_play(deal_card)
+    existing_game.state = GameState.IN_PROGRESS
+    await DB.update_game_state(game_id, existing_game.state)
+    existing_game.deal_cards()
+    update_game = await DB.update_card_play(existing_game.model_dump(by_alias=True))
     return update_game
 
 
-@app.post("/game/{game_id}/play", response_model= GameResponseModel)
-async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id: str):
+@app.post("/game/{game_id}/play", response_model= GameResponseModel,dependencies=[Depends(cookie)])
+async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id: str, session_data: SessionData):
+    session_data = SessionData()
     existing_game = await DB.get_game_by_id(game_id)
     card_id = card_request.card_id
     game = GameInDB(**existing_game)
@@ -86,22 +88,20 @@ async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id
     player = game.players[current_player_index]
     ## collect money
     if card.card_type == CardType.MONEY:
-        # existing_game["players"][current_player_index]["hand"].remove(card_id)
         game.players[current_player_index].hand.remove(card_id)
         game.players[current_player_index].money_pile.append(card_id)
         game.action_remaining_per_turn -= 1
-        card_play = await DB.update_card_play(game.model_dump(by_alias=True))
-        return card_play
+        await DB.update_card_play(game.model_dump(by_alias=True))
+        # return card_play
 
     ## play property
     if card.card_type in [CardType.PROPERTY, CardType.WILD_PROPERTY]:
         if play_property(card_request, card, player):
-            game.action_remaining_per_turn -= 1
+            game.update_remaining_actions()
             game.players[current_player_index] = player
             if card.card_type == CardType.WILD_PROPERTY:
                 await update_wild_property(game_id, card)
-            property_played = await DB.update_card_play(game.model_dump(by_alias=True))
-            return property_played
+                await DB.update_card_play(game.model_dump(by_alias=True))
         else:
             raise HTTPException(status_code=400, detail="Failed to play property.")
 
@@ -116,5 +116,8 @@ async def play_card(game_id: str, card_request: PlayerCardPlayRequest, player_id
 
     if card.card_type in [CardType.RENT, CardType.WILD_RENT]:
         print("time to pay rent")
+
+    if game.check_winner():
+        existing_game = await DB.update_game_state(game_id,game.state)
 
     return existing_game
