@@ -24,3 +24,4 @@ class PlayerInGameResponse(BaseModel):
     name: str = Field(...)
     money_pile: List[str] = []
     property_set: Dict[PropertyColor, List[str]] = {}  # Property color > Card ID
+
