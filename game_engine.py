@@ -1,12 +1,10 @@
 # Initialise and maintain state of game elements
 import random
 import uuid
-from typing import Optional
 
-from db.mongo import *
 from core.util import *
+from db.mongo import *
 from models.cards import *
-from models.game import PlayerCardPlayRequest
 from models.player import Player
 
 
@@ -122,80 +120,39 @@ def setup_deck() -> list[CardInDB]:
     random.shuffle(cards)
     return cards
 
-def deal_cards(game: dict) -> dict:
-    # add 5 card to each player hand
-    print("Dealing cards to players ...")
-    for _ in range(5):
-        for player in game["players"]:
-            card = game["draw_pile"].pop()
-            player["hand"].append(card)
-    game["action_remaining_per_turn"] = 3
-    return game
-
-def draw_card(game,player: Player, draw_count: int = 2):
-    # game engine will check the draw_pile count for each player to deal card
-    # to them default is 2 for start of turn and PASS GO
-    for _ in range(draw_count):
-        if not game.draw_pile:
-            print("No cards left in draw pile. Reshuffling discard pile back to draw pile !!")
-            game.draw_pile = game.discard_pile
-            game.discard_pile = []
-            random.shuffle(game.draw_pile)
-            print("Done reshuffling !!!")
-        if game.draw_pile:
-            player.hand.append(game.draw_pile.pop())
-    print(f"{draw_count} cards added to {player.name}'s hand")
-
-def get_current_player(current_index: int, players: list[Player], player_id: str) -> Player:
-    for idx, player in enumerate(players):
-        if player.id == player_id and idx == current_index:
-            return player
-    return None
-
-
-def is_valid_card(card_id: str, player_hand: list[str]) -> bool:
-    if card_id in player_hand:
-        return True
-    return False
-
-def next_player(game: GameInDB):
-    # pick next player in turn, set it to current player
-    game.current_player_index = (game.current_player_id + 1) % len(game.players)
-    return game.current_player_index
-
-def play_property(card_request: PlayerCardPlayRequest, card: CardInDB ,player: Player):
-    print(card_request)
-    card_id = card_request.card_id
-    if card.card_type == CardType.PROPERTY:
-        property_card = card
-        color = property_card.color
-        if color not in player.property_set:
-            player.property_set[color] = []
-        player.hand.remove(card_id)
-        player.property_set[color].append(card_id)
-        return  True
-
-    if card.card_type == CardType.WILD_PROPERTY:
-        wild_property = card
-        if not card_request.self_property_color:
-            raise HTTPException(status_code=400, detail="Property color must be specified for wild property card")
-        if card_request.self_property_color not in wild_property.colors:
-            raise HTTPException(status_code=400, detail="Invalid color specified for wild property card")
-
-        wild_property.assigned_color = card_request.self_property_color
-        if wild_property.assigned_color not in player.property_set:
-            player.property_set[wild_property.assigned_color] = []
-        print("its wild wild")
-        player.hand.remove(card_id)
-        player.property_set[wild_property.assigned_color].append(card_id)
-        return True
-    return False
+# def play_property(card_request: PlayerCardPlayRequest, card: CardInDB ,player: Player):
+#     print(card_request)
+#     card_id = card_request.card_id
+#     if card.card_type == CardType.PROPERTY:
+#         property_card = card
+#         color = property_card.color
+#         if color not in player.property_set:
+#             player.property_set[color] = []
+#         player.hand.remove(card_id)
+#         player.property_set[color].append(card_id)
+#         return  True
+#
+#     if card.card_type == CardType.WILD_PROPERTY:
+#         wild_property = card
+#         if not card_request.self_property_color:
+#             raise HTTPException(status_code=400, detail="Property color must be specified for wild property card")
+#         if card_request.self_property_color not in wild_property.colors:
+#             raise HTTPException(status_code=400, detail="Invalid color specified for wild property card")
+#
+#         wild_property.assigned_color = card_request.self_property_color
+#         if wild_property.assigned_color not in player.property_set:
+#             player.property_set[wild_property.assigned_color] = []
+#         print("its wild wild")
+#         player.hand.remove(card_id)
+#         player.property_set[wild_property.assigned_color].append(card_id)
+#         return True
+#     return False
 
 def play_action_card(game: GameInDB,action_card: CardInDB, target_player: Optional[Player] = None) -> bool:
     # depending on the type of action card manage the money and properties etc
     current_player = game.players[game.current_player_index]
     if action_card.action_type == ActionCardType.PASS_GO:
-        draw_card(game,current_player)
+        game.draw_card(current_player,draw_count=2)
         current_player.hand.remove(action_card.id)
         game.discard_pile.append(action_card.id)
         return True

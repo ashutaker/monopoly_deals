@@ -18,6 +18,7 @@ cookie = SessionCookie(
 
 class SessionData(BaseModel):
     player_id: str
+    game_id: str
 
 backend = InMemoryBackend[UUID, SessionData]()
 
